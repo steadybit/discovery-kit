@@ -15,6 +15,6 @@ We recommend that you read the following documentation to get started with Disco
 
 [//]: # (- [Terminology]&#40;/docs/terminology.md&#41;)
 
-[//]: # (- [Examples]&#40;/docs/examples.md&#41;)
+- [Examples](/docs/examples.md)
 
 [//]: # (- [FAQ]&#40;/docs/faq.md&#41;)
