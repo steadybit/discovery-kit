@@ -8,9 +8,9 @@ export const router = express.Router();
 
 router.get('/', (_, res) => {
 	const response: IndexResponse = {
-		discoveries: [{ path: '/discoveries/cats' }],
-		targetTypes: [{ path: '/targettypes/cats' }],
-		targetAttributes: [{ path: '/targetattributes/cats' }],
+		discoveries: [{ path: '/discoveries/cats' }, { path: '/discoveries/dogs' }],
+		targetTypes: [{ path: '/targettypes/cat' }, { path: '/targettypes/dog' }],
+		targetAttributes: [{ path: '/targetattributes/pets' }],
 	};
 	res.json(response);
 });

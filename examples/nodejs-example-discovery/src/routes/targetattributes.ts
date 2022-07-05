@@ -6,12 +6,12 @@ import express from 'express';
 
 export const router = express.Router();
 
-router.get('/targetattributes/cats', (_, res) => {
+router.get('/targetattributes/pets', (_, res) => {
 	const response: DescribeTargetAttributeResponse = {
 		attributes: [
-			{ attribute: 'cat.name', label: { one: 'cat name', other: 'cat names' } },
-			{ attribute: 'cat.age', label: { one: 'cat age', other: 'cat ages' } },
-			{ attribute: 'cat.owner', label: { one: 'cat owner', other: 'cat owner' } },
+			{ attribute: 'pet.name', label: { one: 'pet name', other: 'pet names' } },
+			{ attribute: 'pet.age', label: { one: 'pet age', other: 'pet ages' } },
+			{ attribute: 'pet.owner', label: { one: 'pet owner', other: 'pet owner' } },
 		],
 	};
 	res.json(response);
