@@ -1,6 +1,6 @@
 FROM node:lts
 
-EXPOSE 3000
+EXPOSE 8085
 
 COPY . /home/node/app
 

@@ -1,12 +1,12 @@
 {
-  "name": "example-nodejs-discovery",
+  "name": "example-nodejs-pet-discovery",
   "version": "1.0.0",
   "description": "Example showcasing an implementation of a discovery",
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "docker:build": "docker build -t example-nodejs-discovery .",
-    "docker:start": "docker run -it --rm --init example-nodejs-discovery",
+    "docker:build": "docker build -t example-nodejs-pet-discovery .",
+    "docker:start": "docker run -it --rm --init example-nodejs-pet-discovery",
     "lint": "eslint --ext js,ts,tsx src",
     "prettier": "prettier --write src"
   },

@@ -16,6 +16,6 @@ npm start
 docker run -it \
   --rm \
   --init \
-  -p 3002:3002 \
-  ghcr.io/steadybit/example-nodejs-discovery:main
+  -p 8085:8085 \
+  ghcr.io/steadybit/example-nodejs-pet-discovery:main
 ```
