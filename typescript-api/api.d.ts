@@ -45,7 +45,6 @@ export interface SuccessfulDescribeTargetTypeResponse {
 	label: PuralLabel;
 	icon: string;
 	table: Table;
-	selectableBy?: SelectableBy;
 }
 
 export type DescribeTargetAttributeResponse = SuccessfulDescribeTargetAttributeResponse | Problem;
@@ -55,7 +54,8 @@ export interface SuccessfulDescribeTargetAttributeResponse {
 }
 
 export interface Target {
-	name: string;
+	id: string;
+	label?: string;
 	targetType: string;
 	attributes: Record<string, string[]>;
 }
@@ -78,11 +78,6 @@ export interface Column {
 export interface Order {
 	attribute: string;
 	direction: 'ASC' | 'DESC';
-}
-
-export interface SelectableBy {
-	type: 'MULTI' | 'SINGLE';
-	attributes: string[];
 }
 
 export interface TargetAttributeDescription {

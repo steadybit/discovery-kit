@@ -22,7 +22,8 @@ router.get('/discoveries/cats/discover', (req, res) => {
 	const response: DiscoverResponse = {
 		targets: [
 			{
-				name: 'garfield',
+				id: 'garfield',
+				label: 'Garfield',
 				targetType: 'cat',
 				attributes: {
 					'pet.name': ['Garfield'],
@@ -31,7 +32,8 @@ router.get('/discoveries/cats/discover', (req, res) => {
 				},
 			},
 			{
-				name: 'kitty',
+				id: 'kitty',
+				label: 'Kitty',
 				targetType: 'cat',
 				attributes: {
 					'pet.name': ['Kitty'],
@@ -60,7 +62,8 @@ router.get('/discoveries/dogs/discover', (req, res) => {
 	const response: DiscoverResponse = {
 		targets: [
 			{
-				name: 'emma',
+				id: 'emma',
+				label: 'Emma',
 				targetType: 'dog',
 				attributes: {
 					'pet.name': ['Emma'],
@@ -69,7 +72,8 @@ router.get('/discoveries/dogs/discover', (req, res) => {
 				},
 			},
 			{
-				name: 'lassie',
+				id: 'lassie',
+				label: 'Lassie',
 				targetType: 'dog',
 				attributes: {
 					'pet.name': ['Lassie'],

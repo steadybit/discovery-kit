@@ -10,6 +10,19 @@ npm install
 npm start
 ```
 
+## Starting the example through Kubernetes
+
+This is the recommended approach to give this example app a try. The app is deployed within a namespace `example-nodejs-pet-discovery` as a deployment
+called `example-nodejs-pet-discovery`. For more details, please inspect `kubernetes.yml`.
+
+```sh
+kubectl apply -f kubernetes.yml
+```
+
+Once deployed in your Kubernetes cluster the example is reachable
+through `http://example-nodejs-pet-discovery.example-nodejs-pet-discovery.svc.cluster.local:8085`. Steadybit agents can be configured to support this
+discovery provider through the environment variable `STEADYBIT_AGENT_ATTACKS_DISCOVERIES_0_URL`.
+
 ## Starting the example using Docker
 
 ```sh

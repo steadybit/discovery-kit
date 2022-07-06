@@ -19,10 +19,6 @@ router.get('/targettypes/cat', (_, res) => {
 			columns: [{ attribute: 'pet.name' }, { attribute: 'pet.age' }, { attribute: 'pet.owner' }],
 			orderBy: [{ attribute: 'pet.name', direction: 'ASC' }],
 		},
-		selectableBy: {
-			type: 'SINGLE',
-			attributes: ['pet.name'],
-		},
 	};
 	res.json(response);
 });
@@ -39,10 +35,6 @@ router.get('/targettypes/dog', (_, res) => {
 		table: {
 			columns: [{ attribute: 'pet.name' }, { attribute: 'pet.age' }, { attribute: 'pet.owner' }],
 			orderBy: [{ attribute: 'pet.name', direction: 'ASC' }],
-		},
-		selectableBy: {
-			type: 'SINGLE',
-			attributes: ['pet.name'],
 		},
 	};
 	res.json(response);
