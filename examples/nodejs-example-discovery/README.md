@@ -1,6 +1,6 @@
 # Discovery Example: Github-Gist
 
-A tiny discovery implementation which exposes the required HTTP APIs and discovers "cats". If you are new to Steadybit's discoveries, this
+A tiny discovery implementation which exposes the required HTTP APIs and discovers some targets of type `cat`. If you are new to Steadybit's discoveries, this
 example app will help you understand the fundamental contracts and control flows.
 
 ## Starting the example
