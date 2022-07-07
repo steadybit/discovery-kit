@@ -1,0 +1,39 @@
+{
+  "$id": "https://schema.steadybit.io/discovery-kit/describeTargetAttributeResponse",
+  "title": "Describe Target Attributes Response",
+  "description": "Provides details about attributes, which are provided by the discoveries.",
+  "type": "object",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "description": "A list of attributes.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "attribute": {
+                "type": "string",
+                "description": "The attribute name, for example `cat.name`"
+              },
+              "label": {
+                "$ref": "pluralLabel"
+              }
+            },
+            "required": [
+              "attribute",
+              "label"
+            ]
+          }
+        }
+      },
+      "required": [
+        "attributes"
+      ]
+    },
+    {
+      "$ref": "errorResponse"
+    }
+  ]
+}

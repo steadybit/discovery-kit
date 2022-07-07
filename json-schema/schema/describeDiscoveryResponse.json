@@ -1,0 +1,49 @@
+{
+  "$id": "https://schema.steadybit.io/discovery-kit/describeDiscoveryResponse",
+  "title": "Describe Discovery Response",
+  "description": "Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.",
+  "type": "object",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A technical ID that is used to uniquely identify this type of attack. You will typically want to use something like `org.example.attacks.my-fancy-attack`."
+        },
+        "discover": {
+          "allOf": [
+            {
+              "$ref": "describingEndpointRef"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "callInterval": {
+                  "type": "string",
+                  "pattern": "^\\d+(ms|s)$",
+                  "description": "At what frequency should the discover endpoint be called? Takes durations in the format of `100ms` or `10s`."
+                }
+              }
+            }
+          ]
+        },
+        "restrictTo": {
+          "type": "string",
+          "description": "If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent.",
+          "enum": [
+            "ANY",
+            "LEADER"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "discover"
+      ]
+    },
+    {
+      "$ref": "errorResponse"
+    }
+  ]
+}

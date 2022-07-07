@@ -1,0 +1,91 @@
+{
+  "$id": "https://schema.steadybit.io/discovery-kit/describeTargetTypeResponse",
+  "title": "Describe Target Type Response",
+  "description": "A definition of a target type and how it will be handled by the ui",
+  "type": "object",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "a global unique name of the target type"
+        },
+        "version": {
+          "type": "string",
+          "description": "The version of the target type. Remember to increase the value everytime you update the definitions. The platform will ignore any definition changes with the same version. We do recommend usage of semver strings."
+        },
+        "label": {
+          "$ref": "pluralLabel"
+        },
+        "icon": {
+          "type": "string",
+          "description": "An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image.",
+          "maxLength": 1000000
+        },
+        "table": {
+          "type": "object",
+          "properties": {
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "attribute": {
+                    "type": "string",
+                    "description": "The attribute which should be displayed in the column."
+                  },
+                  "fallbackAttributes": {
+                    "type": "array",
+                    "description": "If the given attribute is empty, the fallbackAttributes are used. The first non-empty attribute will be displayed.",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "attribute"
+                ]
+              }
+            },
+            "orderBy": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "attribute": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "ASC",
+                      "DESC"
+                    ]
+                  }
+                },
+                "required": [
+                  "attribute",
+                  "direction"
+                ]
+              }
+            }
+          },
+          "required": [
+            "columns"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "label",
+        "icon",
+        "table"
+      ]
+    },
+    {
+      "$ref": "errorResponse"
+    }
+  ]
+}
