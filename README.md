@@ -1,3 +1,5 @@
+<img src="./logo.png" width="400" align="right" alt="DiscoveryKit logo depicting a radar scan within a rounded rectangle">
+
 # Steadybit DiscoveryKit
 
 The Steadybit DiscoveryKit enables the extension of Steadybit with new discovery capabilities.
