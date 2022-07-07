@@ -13,6 +13,7 @@ router.get('/discoveries/cats', (_, res) => {
 			path: '/discoveries/cats/discover',
 			callInterval: '10s',
 		},
+		restrictTo: 'LEADER',
 	};
 	res.json(response);
 });
