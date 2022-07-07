@@ -53,6 +53,7 @@ router.get('/discoveries/dogs', (_, res) => {
 			path: '/discoveries/dogs/discover',
 			callInterval: '10s',
 		},
+		restrictTo: 'LEADER',
 	};
 	res.json(response);
 });

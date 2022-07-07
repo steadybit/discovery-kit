@@ -29,6 +29,7 @@ export type DescribeDiscoveryResponse = SuccessfulDescribeDiscoveryResponse | Pr
 export interface SuccessfulDescribeDiscoveryResponse {
 	id: string;
 	discover: HttpEndpointRefWithCallInternval<'GET'>;
+	restrictTo?: 'ANY' | 'LEADER';
 }
 
 export type DiscoverResponse = SuccessfulDiscoverResponse | Problem;
@@ -42,7 +43,7 @@ export type DescribeTargetTypeResponse = SuccessfulDescribeTargetTypeResponse | 
 export interface SuccessfulDescribeTargetTypeResponse {
 	id: string;
 	version: string;
-	label: PuralLabel;
+	label: PluralLabel;
 	icon: string;
 	table: Table;
 }
@@ -60,7 +61,7 @@ export interface Target {
 	attributes: Record<string, string[]>;
 }
 
-export interface PuralLabel {
+export interface PluralLabel {
 	one: string;
 	other: string;
 }
@@ -82,7 +83,7 @@ export interface Order {
 
 export interface TargetAttributeDescription {
 	attribute: string;
-	label: PuralLabel;
+	label: PluralLabel;
 }
 
 export interface Problem {

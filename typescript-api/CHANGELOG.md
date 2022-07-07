@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- typo `PuralLabel` to `PluralLabel`
+- Added `restrictTo` to `DescribeDiscoveryResponse`
+
 ## 0.2.0
 
 - changed `Target`
