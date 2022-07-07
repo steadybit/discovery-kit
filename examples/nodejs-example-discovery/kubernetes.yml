@@ -34,6 +34,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: example-nodejs-pet-discovery
+  namespace: example-nodejs-pet-discovery
 spec:
   selector:
     app.kubernetes.io/name: example-nodejs-pet-discovery
