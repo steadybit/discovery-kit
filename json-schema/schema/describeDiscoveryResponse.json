@@ -21,7 +21,7 @@
               "properties": {
                 "callInterval": {
                   "type": "string",
-                  "pattern": "^\\d+(ms|s)$",
+                  "pattern": "^\\d+(ns|ms|s|m|h|d)$",
                   "description": "At what frequency should the discover endpoint be called? Takes durations in the format of `100ms` or `10s`."
                 }
               }
