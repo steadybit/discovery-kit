@@ -11,12 +11,10 @@ more, [reach out to us](https://www.steadybit.com/contact).
 
 We recommend that you read the following documentation to get started with DiscoveryKit.
 
-[//]: # (- [Discovery API]&#40;/docs/discovery-api.md&#41;)
+- [Discovery API](/docs/discovery-api.md)
 
-[//]: # (- [Discovery Registration]&#40;/docs/discovery-registration.md&#41;)
+- [Discovery Registration](/docs/discovery-registration.md)
 
-[//]: # (- [Terminology]&#40;/docs/terminology.md&#41;)
+- [Terminology](/docs/terminology.md)
 
 - [Examples](/docs/examples.md)
-
-[//]: # (- [FAQ]&#40;/docs/faq.md&#41;)
