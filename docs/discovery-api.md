@@ -33,25 +33,25 @@ This endpoint needs to be [registered with Steadybit agents](./discovery-registr
 
 // Response: 200
 {
-  discoveries: [
+  "discoveries": [
     {
-      path: '/discoveries/cats'
+      "path": "/discoveries/cats"
     },
     {
-      path: '/discoveries/dogs'
+      "path": "/discoveries/dogs"
     }
   ],
-  targetTypes: [
+  "targetTypes": [
     {
-      path: '/targettypes/cat'
+      "path": "/targettypes/cat"
     },
     {
-      path: '/targettypes/dog'
+      "path": "/targettypes/dog"
     }
   ],
-  targetAttributes: [
+  "targetAttributes": [
     {
-      path: '/targetattributes/pets'
+      "path": "/targetattributes/pets"
     }
   ]
 }
