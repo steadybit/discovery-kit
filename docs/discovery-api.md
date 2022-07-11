@@ -4,10 +4,7 @@ This document explains the discovery API, control flow and the contracts behind 
 
 ## Overview
 
-Discoveries are implemented with the help of DiscoveryKit and the discovery API through an implementation of an discovery provider. Discovery providers are HTTP
-servers implementing the discovery API to describe which discoveries are supported and how to execute these. The following diagram illustrates who is issuing
-calls and in what phases. Besides discoveries, the discovery provider is able to describe new target types and target attributes, which will be used by the
-platform ui to display and select targets.
+Discoveries are implemented with the help of DiscoveryKit and the discovery API through the implementation of a discovery provider. Discovery providers are HTTP servers implementing the discovery API to describe which discoveries are supported and how to execute these. The following diagram illustrates who is issuing calls and in what phases. Besides discoveries, the discovery provider can describe new target types and attributes, which the platform user interface will use to display and select targets.
 
 ![UML sequence diagram showing in what order the APIs are called](discovery-flow.svg)
 
@@ -15,9 +12,9 @@ As can be seen above, the discovery provider is called by the Steadybit agent in
 
 - In the discovery registration phase, Steadybit learns about the supported discoveries and its targets. Once this phase is completed, discoveries will be
   scheduled within the agent.
-- The discovery will be called by the agents scheduler in the execution phase.
+- The discovery will be called by the agent's scheduler in the execution phase.
 
-The following section explain the various API endpoints, their responsibilities and structures in more detail.
+The following sections explain the various API endpoints, their responsibilities and structures in more detail.
 
 ## Index Response
 
@@ -64,18 +61,16 @@ This endpoint needs to be [registered with Steadybit agents](./discovery-registr
 
 ## Discovery Description
 
-An discovery description is required for each discovery. The HTTP endpoint serving the description is discovered through the index endpoint.
+A discovery description is required for each discovery. The HTTP endpoint serving the description is discovered through the index endpoint.
 
-Discovery descriptions expose information about the endpoint, the callInterval and an optional restriction where to run the discovery.
+Discovery descriptions expose information about the endpoint, the call interval and an optional restriction where to run the discovery.
 
 ### restrictTo
 
-Keep in mind, that the discovery will be executed on all agents, where the endpoints are configured. If you apply the endpoint configuration to a k8s daemonset
-for example, you may have multiple instances fetching the same target data. This will lead to duplicate targets in the platform, cause each target also includes
-the agent-id to determine its uniqueness. The `restrictTo`-attribute can be helpful. Currently there are two values supported.
+Remember that the discoveries will be executed on all agents where the endpoints are configured. For example, if you apply the endpoint configuration to a Kubernetes daemonset, you may have multiple instances fetching the same target data. This could lead to duplicate targets in the platform (technically, each target's unique ID includes the agent ID). The `restrictTo`-attribute helps restrict the discovery execution to specific contexts. Currently, there are two supported values.
 
 - `ANY`, the default, will run the discovery on every agent
-- `LEADER`, will only call the discovery on from a single pod in your cluster - the current leader.
+- `LEADER`, will only call the discovery from a single Kubernetes pod in your cluster - the current leader.
 
 ### Example
 
@@ -100,17 +95,13 @@ the agent-id to determine its uniqueness. The `restrictTo`-attribute can be help
 
 ## Target Type Description
 
-The `targetType` specifies how the platform should display targets in the ui. All attacks are associated to a single target type to narrow down the targets,
-which can be selected for the attack.
+The `targetType` specifies how the platform should display targets in the user interface. All attacks are associated with a single target type. Among others, this helps to narrow down the targets for an attack.
 
-The common use-case would be [to define](#target-type-description) an own `targetType`, but it's also possible to let your discovery report additional targets
-of one of Steadybits pre-defined target types like for example `host`, `container` or `kubernetes-namespace`. If you choose to report targets with existing
-target types, keep in mind, that there might be attacks which need a set of attributes to be executed.
+A common use-case is [to define](#target-type-description) a custom `targetType`. Still, it's also possible to let your discovery report additional targets from one of Steadybit's pre-defined target types (for example, hosts, containers or Kubernetes deployments. If you report targets for existing target types, keep in mind that there are attacks that require specific attributes for attack execution.
 
 ### Versioning
 
-Target Types are versioned strictly, and Steadybit will ignore definition changes for the same version. Remember to update the version every time you update the
-target type description.
+Target types are versioned strictly, and Steadybit will ignore definition changes for the same version. Remember to update the version every time you update the target type description.
 
 ### Example
 
@@ -155,8 +146,7 @@ target type description.
 
 ## Target Attribute Description
 
-You can provide a list attribute labels. This will be used by the platform to show for example column headers or to show the attributes in the target selection
-query builder. This is optional, by default all `.` are replaced by a space.
+You can provide a list of attribute definitions. The platform will use these attribute definitions to render human-readable column headers or labels. Attribute definitions are optional. By default, all `.` are replaced by a space to generate human-readable labels.
 
 ### Example
 
@@ -198,8 +188,7 @@ query builder. This is optional, by default all `.` are replaced by a space.
 
 ## Discovery Execution
 
-Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` provided in the Discovery Description. The endpoint needs to return a list of all
-current discovered targets.
+Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` provided in the discovery description. The endpoint needs to return a list of all discovered targets.
 
 ### Example
 
