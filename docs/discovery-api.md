@@ -95,8 +95,8 @@ the agent-id to determine its uniqueness. The `restrictTo`-attribute can be help
 
 ### References
 
-- [TypeScript API](https://github.com/steadybit/attack-kit/tree/main/typescript-api): `DescribeAttackResponse`
-- [JSON Schema](https://github.com/steadybit/attack-kit/tree/main/json-schema): `describeAttackResponse`
+- [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `DescribeDiscoveryResponse`
+- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `describeDiscoveryResponse`
 
 ## Target Type Description
 
