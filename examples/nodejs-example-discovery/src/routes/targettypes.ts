@@ -9,7 +9,7 @@ export const router = express.Router();
 router.get('/targettypes/cat', (_, res) => {
 	const response: DescribeTargetTypeResponse = {
 		id: 'cat',
-		version: '1.0.0',
+		version: '1.1.0',
 		label: {
 			one: 'cat',
 			other: 'cats',
@@ -27,7 +27,7 @@ router.get('/targettypes/cat', (_, res) => {
 router.get('/targettypes/dog', (_, res) => {
 	const response: DescribeTargetTypeResponse = {
 		id: 'dog',
-		version: '1.0.0',
+		version: '1.1.0',
 		label: {
 			one: 'dog',
 			other: 'dogs',
