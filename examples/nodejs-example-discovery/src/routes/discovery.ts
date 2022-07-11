@@ -27,6 +27,7 @@ router.get('/discoveries/cats/discover', (req, res) => {
 				label: 'Garfield',
 				targetType: 'cat',
 				attributes: {
+					'steadybit.label': ['Garfield'],
 					'pet.name': ['Garfield'],
 					'pet.age': ['42'],
 					'pet.owner': ['Daniel'],
@@ -37,6 +38,7 @@ router.get('/discoveries/cats/discover', (req, res) => {
 				label: 'Kitty',
 				targetType: 'cat',
 				attributes: {
+					'steadybit.label': ['Kitty'],
 					'pet.name': ['Kitty'],
 					'pet.age': ['0'],
 					'pet.owner': ['Ben'],
@@ -68,6 +70,7 @@ router.get('/discoveries/dogs/discover', (req, res) => {
 				label: 'Emma',
 				targetType: 'dog',
 				attributes: {
+					'steadybit.label': ['Emma'],
 					'pet.name': ['Emma'],
 					'pet.age': ['2'],
 					'pet.owner': ['Daniel'],
@@ -78,6 +81,7 @@ router.get('/discoveries/dogs/discover', (req, res) => {
 				label: 'Lassie',
 				targetType: 'dog',
 				attributes: {
+					'steadybit.label': ['Lassie'],
 					'pet.name': ['Lassie'],
 					'pet.age': ['7'],
 					'pet.owner': ['Johannes'],
