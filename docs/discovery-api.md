@@ -84,12 +84,12 @@ the agent-id to determine its uniqueness. The `restrictTo`-attribute can be help
 
 // Response: 200
 {
-  id: 'cats-discovery',
-  discover: {
-    path: '/discoveries/cats/discover',
-    callInterval: '10s'
+  "id": "cats-discovery",
+  "discover": {
+    "path": "/discoveries/cats/discover",
+    "callInterval": "10s"
   },
-  restrictTo: 'LEADER'
+  "restrictTo": "LEADER"
 }
 ```
 
@@ -119,29 +119,29 @@ target type description.
 
 // Response: 200
 {
-  id: 'cat',
-  version: '1.0.0',
-  label: {
-    one: 'cat',
-    other: 'cats'
+  "id": "cat",
+  "version": "1.0.0",
+  "label": {
+    "one": "cat",
+    "other": "cats"
   },
-  icon: 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgNDkuOTg5IDQ5Ljk4OSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDkuOTg5IDQ5Ljk4OTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPGc+DQoJCTxwYXRoIGQ9Ik00OS41NjUsMC4yOTJjLTAuMjc0LTAuMjczLTAuNjgyLTAuMzYzLTEuMDQ0LTAuMjM0TDM1Ljk0OCw0LjU2NUMzMi42MTQsMi44NzgsMjguODgsMS45ODksMjUuMTIsMS45ODkNCgkJCWMtMy44LDAtNy41NywwLjkwOC0xMC45MzMsMi42MjlsLTEyLjcyLTQuNTZjLTAuMzYzLTAuMTI5LTAuNzctMC4wMzktMS4wNDQsMC4yMzRDMC4xNSwwLjU2NiwwLjA1OSwwLjk3MywwLjE4OSwxLjMzNw0KCQkJbDQuMzg3LDEyLjIzN0MyLjMxMywxNy4zMTIsMS4xMiwyMS41OTMsMS4xMiwyNS45ODljMCwxMy4yMzMsMTAuNzY2LDI0LDI0LDI0YzEzLjIzMywwLDI0LTEwLjc2NywyNC0yNA0KCQkJYzAtNC41MDMtMS4yNDktOC44NzMtMy42MTUtMTIuNjcyTDQ5LjgsMS4zMzdDNDkuOTMsMC45NzMsNDkuODM5LDAuNTY2LDQ5LjU2NSwwLjI5MnogTTQzLjQ1NywxMy4xMDMNCgkJCWMtMC4xMDUsMC4yOTUtMC4wNjcsMC42MjIsMC4xMDQsMC44ODRjMi4zMjgsMy41NywzLjU1OSw3LjcyMSwzLjU1OSwxMi4wMDJjMCwxMi4xMzEtOS44NjksMjItMjIsMjJzLTIyLTkuODY5LTIyLTIyDQoJCQljMC00LjE4MSwxLjE3Ny04LjI0OCwzLjQwNS0xMS43NjNjMC4xNjUtMC4yNjEsMC4yMDEtMC41ODIsMC4wOTctMC44NzNMMi43ODYsMi42NTZsMTEuMTQsMy45OTMNCgkJCWMwLjI2NywwLjA5NSwwLjU2MSwwLjA3MywwLjgxLTAuMDYxYzMuMTcxLTEuNyw2Ljc2Mi0yLjYsMTAuMzg0LTIuNmMzLjU4NCwwLDcuMTQyLDAuODgxLDEwLjI4NywyLjU0OQ0KCQkJYzAuMjQ4LDAuMTMyLDAuNTQxLDAuMTUyLDAuODA2LDAuMDU4bDEwLjk5LTMuOTRMNDMuNDU3LDEzLjEwM3oiLz4NCgkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSIyMS45OTkiIHI9IjIiLz4NCgkJPGNpcmNsZSBjeD0iMzQuMTMiIGN5PSIyMS45OTkiIHI9IjIiLz4NCgkJPHBhdGggZD0iTTM0LjEzLDMzLjk5OWMwLDIuMjA2LTEuNzk0LDQtNCw0cy00LTEuNzk0LTQtNHYtMC4wODFjMi4yNzktMC4zNzIsNC0xLjk4Nyw0LTMuOTE5YzAtMi4yMDYtMi4yNDMtNC01LTRzLTUsMS43OTQtNSw0DQoJCQljMCwxLjkzMiwxLjcyMSwzLjU0Nyw0LDMuOTE5djAuMDgxYzAsMi4yMDYtMS43OTQsNC00LDRzLTQtMS43OTQtNC00di0xaC0ydjFjMCwzLjMwOSwyLjY5MSw2LDYsNmMyLjA4NiwwLDMuOTI0LTEuMDcxLDUtMi42OQ0KCQkJYzEuMDc2LDEuNjIsMi45MTQsMi42OSw1LDIuNjljMy4zMDksMCw2LTIuNjkxLDYtNnYtMWgtMlYzMy45OTl6IE0yMi4xMywyOS45OTljMC0xLjA4NCwxLjM3NC0yLDMtMnMzLDAuOTE2LDMsMnMtMS4zNzQsMi0zLDINCgkJCVMyMi4xMywzMS4wODMsMjIuMTMsMjkuOTk5eiIvPg0KCTwvZz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjwvc3ZnPg0K',
-  table: {
-    columns: [
+  "icon": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgNDkuOTg5IDQ5Ljk4OSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDkuOTg5IDQ5Ljk4OTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPGc+DQoJCTxwYXRoIGQ9Ik00OS41NjUsMC4yOTJjLTAuMjc0LTAuMjczLTAuNjgyLTAuMzYzLTEuMDQ0LTAuMjM0TDM1Ljk0OCw0LjU2NUMzMi42MTQsMi44NzgsMjguODgsMS45ODksMjUuMTIsMS45ODkNCgkJCWMtMy44LDAtNy41NywwLjkwOC0xMC45MzMsMi42MjlsLTEyLjcyLTQuNTZjLTAuMzYzLTAuMTI5LTAuNzctMC4wMzktMS4wNDQsMC4yMzRDMC4xNSwwLjU2NiwwLjA1OSwwLjk3MywwLjE4OSwxLjMzNw0KCQkJbDQuMzg3LDEyLjIzN0MyLjMxMywxNy4zMTIsMS4xMiwyMS41OTMsMS4xMiwyNS45ODljMCwxMy4yMzMsMTAuNzY2LDI0LDI0LDI0YzEzLjIzMywwLDI0LTEwLjc2NywyNC0yNA0KCQkJYzAtNC41MDMtMS4yNDktOC44NzMtMy42MTUtMTIuNjcyTDQ5LjgsMS4zMzdDNDkuOTMsMC45NzMsNDkuODM5LDAuNTY2LDQ5LjU2NSwwLjI5MnogTTQzLjQ1NywxMy4xMDMNCgkJCWMtMC4xMDUsMC4yOTUtMC4wNjcsMC42MjIsMC4xMDQsMC44ODRjMi4zMjgsMy41NywzLjU1OSw3LjcyMSwzLjU1OSwxMi4wMDJjMCwxMi4xMzEtOS44NjksMjItMjIsMjJzLTIyLTkuODY5LTIyLTIyDQoJCQljMC00LjE4MSwxLjE3Ny04LjI0OCwzLjQwNS0xMS43NjNjMC4xNjUtMC4yNjEsMC4yMDEtMC41ODIsMC4wOTctMC44NzNMMi43ODYsMi42NTZsMTEuMTQsMy45OTMNCgkJCWMwLjI2NywwLjA5NSwwLjU2MSwwLjA3MywwLjgxLTAuMDYxYzMuMTcxLTEuNyw2Ljc2Mi0yLjYsMTAuMzg0LTIuNmMzLjU4NCwwLDcuMTQyLDAuODgxLDEwLjI4NywyLjU0OQ0KCQkJYzAuMjQ4LDAuMTMyLDAuNTQxLDAuMTUyLDAuODA2LDAuMDU4bDEwLjk5LTMuOTRMNDMuNDU3LDEzLjEwM3oiLz4NCgkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSIyMS45OTkiIHI9IjIiLz4NCgkJPGNpcmNsZSBjeD0iMzQuMTMiIGN5PSIyMS45OTkiIHI9IjIiLz4NCgkJPHBhdGggZD0iTTM0LjEzLDMzLjk5OWMwLDIuMjA2LTEuNzk0LDQtNCw0cy00LTEuNzk0LTQtNHYtMC4wODFjMi4yNzktMC4zNzIsNC0xLjk4Nyw0LTMuOTE5YzAtMi4yMDYtMi4yNDMtNC01LTRzLTUsMS43OTQtNSw0DQoJCQljMCwxLjkzMiwxLjcyMSwzLjU0Nyw0LDMuOTE5djAuMDgxYzAsMi4yMDYtMS43OTQsNC00LDRzLTQtMS43OTQtNC00di0xaC0ydjFjMCwzLjMwOSwyLjY5MSw2LDYsNmMyLjA4NiwwLDMuOTI0LTEuMDcxLDUtMi42OQ0KCQkJYzEuMDc2LDEuNjIsMi45MTQsMi42OSw1LDIuNjljMy4zMDksMCw2LTIuNjkxLDYtNnYtMWgtMlYzMy45OTl6IE0yMi4xMywyOS45OTljMC0xLjA4NCwxLjM3NC0yLDMtMnMzLDAuOTE2LDMsMnMtMS4zNzQsMi0zLDINCgkJCVMyMi4xMywzMS4wODMsMjIuMTMsMjkuOTk5eiIvPg0KCTwvZz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjwvc3ZnPg0K",
+  "table": {
+    "columns": [
       {
-        attribute: 'pet.name'
+        "attribute": "pet.name"
       },
       {
-        attribute: 'pet.age'
+        "attribute": "pet.age"
       },
       {
-        attribute: 'pet.owner'
+        "attribute": "pet.owner"
       }
     ],
-    orderBy: [
+    "orderBy": [
       {
-        attribute: 'pet.name',
-        direction: 'ASC'
+        "attribute": "pet.name",
+        "direction": "ASC"
       }
     ]
   }
@@ -165,26 +165,26 @@ query builder. This is optional, by default all `.` are replaced by a space.
 
 // Response: 200
 {
-  attributes: [
+  "attributes": [
     {
-      attribute: 'pet.name',
-      label: {
-        one: 'pet name',
-        other: 'pet names'
+      "attribute": "pet.name",
+      "label": {
+        "one": "pet name",
+        "other": "pet names"
       }
     },
     {
-      attribute: 'pet.age',
-      label: {
-        one: 'pet age',
-        other: 'pet ages'
+      "attribute": "pet.age",
+      "label": {
+        "one": "pet age",
+        "other": "pet ages"
       }
     },
     {
-      attribute: 'pet.owner',
-      label: {
-        one: 'pet owner',
-        other: 'pet owner'
+      "attribute": "pet.owner",
+      "label": {
+        "one": "pet owner",
+        "other": "pet owner"
       }
     }
   ]
@@ -208,36 +208,36 @@ current discovered targets.
 
 // Response: 200
 {
-  targets: [
+  "targets": [
     {
-      id: 'garfield',
-      label: 'Garfield',
-      targetType: 'cat',
-      attributes: {
-        'pet.name': [
-          'Garfield'
+      "id": "garfield",
+      "label": "Garfield",
+      "targetType": "cat",
+      "attributes": {
+        "pet.name": [
+          "Garfield"
         ],
-        'pet.age': [
-          '42'
+        "pet.age": [
+          "42"
         ],
-        'pet.owner': [
-          'Daniel'
+        "pet.owner": [
+          "Daniel"
         ]
       }
     },
     {
-      id: 'kitty',
-      label: 'Kitty',
-      targetType: 'cat',
-      attributes: {
-        'pet.name': [
-          'Kitty'
+      "id": "kitty",
+      "label": "Kitty",
+      "targetType": "cat",
+      "attributes": {
+        "pet.name": [
+          "Kitty"
         ],
-        'pet.age': [
-          '0'
+        "pet.age": [
+          "0"
         ],
-        'pet.owner': [
-          'Ben'
+        "pet.owner": [
+          "Ben"
         ]
       }
     }
