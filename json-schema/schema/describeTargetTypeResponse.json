@@ -18,6 +18,10 @@
         "label": {
           "$ref": "pluralLabel"
         },
+        "category": {
+          "type": "string",
+          "description": "A human readable label categorizing the target type, e.g., 'cloud' or 'Kubernetes'."
+        },
         "icon": {
           "type": "string",
           "description": "An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image.",

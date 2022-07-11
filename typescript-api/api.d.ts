@@ -44,7 +44,8 @@ export interface SuccessfulDescribeTargetTypeResponse {
 	id: string;
 	version: string;
 	label: PluralLabel;
-	icon: string;
+	category?: string;
+	icon?: string;
 	table: Table;
 }
 

@@ -30,6 +30,7 @@ describe('describeTargetTypeResponse', () => {
 				id: 'cat',
 				version: '0.0.1',
 				label: { one: 'cat', other: 'cats' },
+				category: 'animals',
 				icon: 'data::',
 				table: {
 					columns: [
