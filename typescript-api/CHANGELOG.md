@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- add `category` support for targets.
+
 ## 0.3.0
 
 - typo `PuralLabel` to `PluralLabel`
