@@ -56,8 +56,9 @@ This endpoint needs to be [registered with Steadybit agents](./discovery-registr
 
 ### References
 
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `DiscoveryList`
 - [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `IndexResponse`
-- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `indexResponse`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `DiscoveryList`
 
 ## Discovery Description
 
@@ -90,8 +91,9 @@ Remember that the discoveries will be executed on all agents where the endpoints
 
 ### References
 
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `DiscoveryDescription`
 - [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `DescribeDiscoveryResponse`
-- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `describeDiscoveryResponse`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `DiscoveryDescription`
 
 ## Target Type Description
 
@@ -142,8 +144,9 @@ Target types are versioned strictly, and Steadybit will ignore definition change
 
 ### References
 
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `TargetDescription`
 - [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `DescribeTargetTypeResponse`
-- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `describeTargetTypeResponse`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `TargetDescription`
 
 ## Target Attribute Description
 
@@ -184,8 +187,9 @@ You can provide a list of attribute definitions. The platform will use these att
 
 ### References
 
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `AttributeDescriptions`
 - [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `DescribeTargetAttributeResponse`
-- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `describeTargetAttributeResponse`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `AttributeDescriptions`
 
 ## Discovery Execution
 
@@ -237,5 +241,6 @@ Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` p
 
 ### References
 
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `DiscoveredTargets`
 - [TypeScript API](https://github.com/steadybit/discovery-kit/tree/main/typescript-api): `DiscoverResponse`
-- [JSON Schema](https://github.com/steadybit/discovery-kit/tree/main/json-schema): `discoverResponse`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `DiscoveredTargets`
