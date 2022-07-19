@@ -1,0 +1,284 @@
+openapi: 3.1.0
+info:
+  title: Steadybit DiscoveryKit API
+  version: 1.0.0
+  license:
+    name: MIT
+    identifier: MIT
+consumes:
+  - application/json
+produces:
+  - application/json
+components:
+  schemas:
+    DiscoveryList:
+      title: Discovery List
+      description: Lists all discoveries that the platform/agent could execute.
+      type: object
+      properties:
+        discoveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescribingEndpointReference'
+          uniqueItems: true
+        targetTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescribingEndpointReference'
+          uniqueItems: true
+      required:
+        - discoveries
+        - targetTypes
+    DiscoveryDescription:
+      title: Discovery Description
+      description: Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.
+      type: object
+      properties:
+        id:
+          type: string
+          description: "A technical ID that is used to uniquely identify this type of discovery. You will typically want to use something like `org.example.discoveries.my-fancy-discovery`."
+        discovery:
+          $ref: '#/components/schemas/DescribingEndpointReferenceWithCallInterval'
+        restrictTo:
+          type: string
+          description: "If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent."
+          enum:
+            - ANY
+            - LEADER
+      required:
+        - id
+        - discovery
+    DiscoveryKitError:
+      title: Error
+      description: >-
+        RFC 7807 Problem Details for HTTP APIs compliant response body for error
+        scenarios
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: 'A short, human-readable summary of the problem type.'
+        detail:
+          type: string
+          description: >-
+            A human-readable explanation specific to this occurrence of the
+            problem.
+        instance:
+          type: string
+          description: >-
+            A URI reference that identifies the specific occurrence of the
+            problem.
+      required:
+        - title
+    DescribingEndpointReference:
+      title: HTTP Endpoint Reference
+      description: HTTP endpoint which the Steadybit platform/agent could communicate with.
+      properties:
+        path:
+          description: Absolute path of the HTTP endpoint.
+          type: string
+          pattern: ^/.*$
+        method:
+          description: HTTP method to use when calling the HTTP endpoint.
+          type: string
+          enum:
+            - GET
+      required:
+        - path
+        - method
+    DescribingEndpointReferenceWithCallInterval:
+      title: HTTP Endpoint Reference
+      description: HTTP endpoint which the Steadybit platform/agent could communicate with.
+      allOf:
+        - $ref: '#/components/schemas/DescribingEndpointReference'
+        - type: object
+          properties:
+            callInterval:
+              type: string
+              pattern: ^\d+(ns|ms|s|m|h|d)$
+              description: >-
+                At what frequency should the state endpoint be called? Takes
+                durations in the format of `100ms` or `10s`.
+    PluralLabel:
+      properties:
+        one:
+          type: string
+        other:
+          type: string
+      required:
+        - one
+        - other
+    AttributeDescription:
+      type: object
+      properties:
+        attribute:
+          type: string
+          description: The attribute name, for example `cat.name`
+        label:
+          $ref: '#/components/schemas/PluralLabel'
+      required:
+        - attribute
+        - label
+    AttributeDescriptions:
+      type: object
+      properties:
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeDescription'
+      required:
+        - attributes
+    Target:
+      type: object
+      description: A single discovered target
+      properties:
+        id:
+          type: string
+          description: "The id of the target, needs to be unique per agent and target type."
+        label:
+          type: string
+          description: "A label, which will be used by the platform to display the target"
+        targetType:
+          type: string
+          description: "The type of the target. Will be used to find matching attacks and find the right ui configuration to show and select the targets."
+        attributes:
+          type: object
+          description: >-
+            These attributes include detailed information about the target
+            provided through the discovery. These attributes are typically used
+            as additional parameters within the attack implementation.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+        - id
+        - label
+        - targetType
+        - attributes
+    DiscoveredTargets:
+      type: object
+      description: The results of a discovery call
+      properties:
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Target'
+      required:
+        - targets
+    OrderBy:
+      type: object
+      properties:
+        attribute:
+          type: string
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+      required:
+        - attribute
+        - direction
+    Column:
+      type: object
+      properties:
+        attribute:
+          type: string
+          description: "The attribute which should be displayed in the column."
+        fallbackAttributes:
+          type: array
+          description: "If the given attribute is empty, the fallbackAttributes are used. The first non-empty attribute will be displayed."
+          items:
+            type: string
+      required:
+        - attribute
+    Table:
+      type: object
+      properties:
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Column'
+        orderBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderBy'
+      required:
+       - columns
+       - orderBy
+    TargetDescription:
+      type: object
+      description: "A definition of a target type and how it will be handled by the ui"
+      properties:
+        id:
+          type: string
+          description: "a global unique name of the target type"
+        version:
+          type: string
+          description: "The version of the target type. Remember to increase the value everytime you update the definitions. The platform will ignore any definition changes with the same version. We do recommend usage of semver strings."
+        label:
+          $ref: '#/components/schemas/PluralLabel'
+        category:
+          type: string
+          description: "A human readable label categorizing the target type, e.g., 'cloud' or 'Kubernetes'."
+        icon:
+          type: string
+          description: "An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image."
+          maxLength: 1000000
+          pattern: '^data:.*$'
+        table:
+          $ref: '#/components/schemas/Table'
+      required:
+       - id
+       - version
+       - label
+       - icon
+       - table
+  responses:
+    DiscoveryListResponse:
+      title: Discovery List Response
+      description: Response for the discovery list endpoint
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/DiscoveryList'
+              - $ref: '#/components/schemas/DiscoveryKitError'
+    DiscoveryDescriptionResponse:
+      title: Describe Discovery Response
+      description: Response for the describe discovery endpoint
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/DiscoveryDescription'
+              - $ref: '#/components/schemas/DiscoveryKitError'
+    DescribeAttributesResponse:
+      title: Describe Attributes Response
+      description: Response for the describe attributes endpoint
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/AttributeDescriptions'
+              - $ref: '#/components/schemas/DiscoveryKitError'
+    TargetDiscoveryResponse:
+      title: Target Discovery Response
+      description: The results of a discovery call
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/DiscoveredTargets'
+              - $ref: '#/components/schemas/DiscoveryKitError'
+    DescribeTargetResponse:
+      title: Target Description Response
+      description: The results of a discovery call
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/TargetDescription'
+              - $ref: '#/components/schemas/DiscoveryKitError'
