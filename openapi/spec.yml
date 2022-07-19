@@ -234,7 +234,6 @@ components:
        - id
        - version
        - label
-       - icon
        - table
   responses:
     DiscoveryListResponse:

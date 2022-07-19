@@ -160,7 +160,7 @@ type TargetDescription struct {
 	Category *string `json:"category,omitempty"`
 
 	// An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image.
-	Icon string `json:"icon"`
+	Icon *string `json:"icon,omitempty"`
 
 	// a global unique name of the target type
 	Id    string      `json:"id"`
