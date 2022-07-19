@@ -85,7 +85,7 @@ type DiscoveredTargets struct {
 // Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.
 type DiscoveryDescription struct {
 	// HTTP endpoint which the Steadybit platform/agent could communicate with.
-	Discovery DescribingEndpointReferenceWithCallInterval `json:"discovery"`
+	Discover DescribingEndpointReferenceWithCallInterval `json:"discover"`
 
 	// A technical ID that is used to uniquely identify this type of discovery. You will typically want to use something like `org.example.discoveries.my-fancy-discovery`.
 	Id string `json:"id"`
@@ -114,8 +114,9 @@ type DiscoveryKitError struct {
 
 // Lists all discoveries that the platform/agent could execute.
 type DiscoveryList struct {
-	Discoveries []DescribingEndpointReference `json:"discoveries"`
-	TargetTypes []DescribingEndpointReference `json:"targetTypes"`
+	Discoveries      []DescribingEndpointReference `json:"discoveries"`
+	TargetAttributes []DescribingEndpointReference `json:"targetAttributes"`
+	TargetTypes      []DescribingEndpointReference `json:"targetTypes"`
 }
 
 // OrderBy defines model for OrderBy.

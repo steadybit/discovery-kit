@@ -26,9 +26,15 @@ components:
           items:
             $ref: '#/components/schemas/DescribingEndpointReference'
           uniqueItems: true
+        targetAttributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescribingEndpointReference'
+          uniqueItems: true
       required:
         - discoveries
         - targetTypes
+        - targetAttributes
     DiscoveryDescription:
       title: Discovery Description
       description: Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.
@@ -37,7 +43,7 @@ components:
         id:
           type: string
           description: "A technical ID that is used to uniquely identify this type of discovery. You will typically want to use something like `org.example.discoveries.my-fancy-discovery`."
-        discovery:
+        discover:
           $ref: '#/components/schemas/DescribingEndpointReferenceWithCallInterval'
         restrictTo:
           type: string
@@ -47,7 +53,7 @@ components:
             - LEADER
       required:
         - id
-        - discovery
+        - discover
     DiscoveryKitError:
       title: Error
       description: >-

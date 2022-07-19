@@ -28,6 +28,12 @@ func TestDiscoveryList(t *testing.T) {
 				Path:   "/",
 			},
 		},
+		TargetAttributes: []DescribingEndpointReference{
+			{
+				Method: "GET",
+				Path:   "/",
+			},
+		},
 	}
 	markAsUsed(t, v)
 }
@@ -77,7 +83,7 @@ func TestDiscoveredTargets(t *testing.T) {
 func TestTargetDescription(t *testing.T) {
 	v := TargetDescription{
 		Category: Ptr("basic"),
-		Icon:     "data:...",
+		Icon:     Ptr("data:..."),
 		Id:       "id",
 		Version:  "1.0.0",
 		Label: PluralLabel{
