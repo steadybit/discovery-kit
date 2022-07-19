@@ -40,7 +40,7 @@ func TestDiscoveryList(t *testing.T) {
 
 func TestDiscoveryDescription(t *testing.T) {
 	v := DiscoveryDescription{
-		Discovery: DescribingEndpointReferenceWithCallInterval{
+		Discover: DescribingEndpointReferenceWithCallInterval{
 			Method:       "GET",
 			Path:         "/",
 			CallInterval: Ptr("5m"),
