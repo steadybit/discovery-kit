@@ -12,5 +12,5 @@ npm install --save-dev @steadybit/discovery-kit-api
 ## Usage
 
 ```typescript
-import { DiscoveryList } from '@steadybit/@steadybit/discovery-kit-api';
+import { DiscoveryList } from '@steadybit/discovery-kit-api';
 ```
