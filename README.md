@@ -4,7 +4,7 @@
 
 The Steadybit DiscoveryKit enables the extension of Steadybit with new discovery capabilities.
 
-At this moment, DiscoveryKit can be considered an **open-alpha**. The contracts and APIs *may* change. If you want to learn
+At this moment, DiscoveryKit can be considered an **open-beta**. The contracts and APIs *may* change. If you want to learn
 more, [reach out to us](https://www.steadybit.com/contact).
 
 ## Getting Started
