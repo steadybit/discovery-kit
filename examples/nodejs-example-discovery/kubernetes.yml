@@ -1,20 +1,20 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: example-nodejs-pet-discovery
+  name: steadybit-extension
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: example-nodejs-pet-discovery
-  namespace: example-nodejs-pet-discovery
+  namespace: steadybit-extension
 automountServiceAccountToken: true
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-nodejs-pet-discovery
-  namespace: example-nodejs-pet-discovery
+  namespace: steadybit-extension
 spec:
   selector:
     matchLabels:
@@ -34,7 +34,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: example-nodejs-pet-discovery
-  namespace: example-nodejs-pet-discovery
+  namespace: steadybit-extension
 spec:
   selector:
     app.kubernetes.io/name: example-nodejs-pet-discovery

@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2022 Steadybit GmbH
 
-import { DescribeDiscoveryResponse, DiscoverResponse } from '@steadybit/discovery-api';
+import { DiscoveryDescription, DiscoveredTargets } from '@steadybit/discovery-kit-api';
 import express from 'express';
 
 export const router = express.Router();
 
 router.get('/discoveries/cats', (_, res) => {
-	const response: DescribeDiscoveryResponse = {
+	const response: DiscoveryDescription = {
 		id: 'cats-discovery',
 		discover: {
+			method: 'GET',
 			path: '/discoveries/cats/discover',
 			callInterval: '10s',
 		},
@@ -20,7 +21,7 @@ router.get('/discoveries/cats', (_, res) => {
 
 router.get('/discoveries/cats/discover', (req, res) => {
 	console.log('Got discover request');
-	const response: DiscoverResponse = {
+	const response: DiscoveredTargets = {
 		targets: [
 			{
 				id: 'garfield',
@@ -50,9 +51,10 @@ router.get('/discoveries/cats/discover', (req, res) => {
 });
 
 router.get('/discoveries/dogs', (_, res) => {
-	const response: DescribeDiscoveryResponse = {
+	const response: DiscoveryDescription = {
 		id: 'dogs-discovery',
 		discover: {
+			method: 'GET',
 			path: '/discoveries/dogs/discover',
 			callInterval: '10s',
 		},
@@ -63,7 +65,7 @@ router.get('/discoveries/dogs', (_, res) => {
 
 router.get('/discoveries/dogs/discover', (req, res) => {
 	console.log('Got discover request');
-	const response: DiscoverResponse = {
+	const response: DiscoveredTargets = {
 		targets: [
 			{
 				id: 'emma',

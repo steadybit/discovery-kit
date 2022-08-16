@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2022 Steadybit GmbH
 
-import { DescribeTargetTypeResponse } from '@steadybit/discovery-api';
+import { TargetDescription } from '@steadybit/discovery-kit-api';
 import express from 'express';
 
 export const router = express.Router();
 
 router.get('/targettypes/cat', (_, res) => {
-	const response: DescribeTargetTypeResponse = {
+	const response: TargetDescription = {
 		id: 'cat',
 		version: '1.1.0',
 		label: {
@@ -25,7 +25,7 @@ router.get('/targettypes/cat', (_, res) => {
 });
 
 router.get('/targettypes/dog', (_, res) => {
-	const response: DescribeTargetTypeResponse = {
+	const response: TargetDescription = {
 		id: 'dog',
 		version: '1.1.0',
 		label: {
