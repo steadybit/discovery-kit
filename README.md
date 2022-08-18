@@ -1,4 +1,4 @@
-<img src="./logo.png" width="400" align="right" alt="DiscoveryKit logo depicting a radar scan within a rounded rectangle">
+<img src="./logo.png" height="130" align="right" alt="DiscoveryKit logo depicting a radar scan within a rounded rectangle">
 
 # Steadybit DiscoveryKit
 
