@@ -25,10 +25,10 @@ export interface components {
 			id: string;
 			discover: components['schemas']['DescribingEndpointReferenceWithCallInterval'];
 			/**
-			 * @description If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent.
+			 * @description If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent. You may alternatively define that the discovery should run only for Steadybit agents operating within the AWS agent mode (as defined by the `STEADYBIT_AGENT_MODE` Steadybit agent environment variable / the `agent.mode` Steadybit agent Helm chart value).
 			 * @enum {string}
 			 */
-			restrictTo?: 'ANY' | 'LEADER';
+			restrictTo?: 'ANY' | 'LEADER' | 'AWS';
 		};
 		/**
 		 * Error

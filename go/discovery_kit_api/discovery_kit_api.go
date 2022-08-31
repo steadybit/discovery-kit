@@ -20,6 +20,7 @@ const (
 // Defines values for DiscoveryDescriptionRestrictTo.
 const (
 	ANY    DiscoveryDescriptionRestrictTo = "ANY"
+	AWS    DiscoveryDescriptionRestrictTo = "AWS"
 	LEADER DiscoveryDescriptionRestrictTo = "LEADER"
 )
 
@@ -90,11 +91,11 @@ type DiscoveryDescription struct {
 	// A technical ID that is used to uniquely identify this type of discovery. You will typically want to use something like `org.example.discoveries.my-fancy-discovery`.
 	Id string `json:"id"`
 
-	// If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent.
+	// If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent. You may alternatively define that the discovery should run only for Steadybit agents operating within the AWS agent mode (as defined by the `STEADYBIT_AGENT_MODE` Steadybit agent environment variable / the `agent.mode` Steadybit agent Helm chart value).
 	RestrictTo *DiscoveryDescriptionRestrictTo `json:"restrictTo,omitempty"`
 }
 
-// If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent.
+// If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent. You may alternatively define that the discovery should run only for Steadybit agents operating within the AWS agent mode (as defined by the `STEADYBIT_AGENT_MODE` Steadybit agent environment variable / the `agent.mode` Steadybit agent Helm chart value).
 type DiscoveryDescriptionRestrictTo string
 
 // RFC 7807 Problem Details for HTTP APIs compliant response body for error scenarios
