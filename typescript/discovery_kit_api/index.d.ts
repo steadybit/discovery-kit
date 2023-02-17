@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2022 Steadybit GmbH
+// SPDX-FileCopyrightText: 2023 Steadybit GmbH
 
 import { components } from './schemas';
 
@@ -16,6 +16,9 @@ export type DiscoveredTargets = components['schemas']['DiscoveredTargets'];
 export type OrderBy = components['schemas']['OrderBy'];
 export type Column = components['schemas']['Column'];
 export type Table = components['schemas']['Table'];
+export type TargetEnrichmentRule = components['schemas']['TargetEnrichmentRule'];
+export type Attribute = components['schemas']['Attribute'];
+export type SourceOrDestination = components['schemas']['SourceOrDestination'];
 export type TargetDescription = components['schemas']['TargetDescription'];
 
 export type DiscoveryListResponse = components['responses']['DiscoveryListResponse']['content']['application/json'];

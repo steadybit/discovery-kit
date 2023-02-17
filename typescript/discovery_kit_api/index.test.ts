@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2022 Steadybit GmbH
+// SPDX-FileCopyrightText: 2023 Steadybit GmbH
 
 import {
 	AttributeDescriptions, DiscoveredTargets,
@@ -89,7 +89,33 @@ export const targetDescription: TargetDescription = {
 				direction: 'DESC'
 			}
 		]
-	}
+	},
+	enrichmentRules: [
+		{
+			src: {
+				type: 'k8s.deployment',
+				selector: {
+					"container.id": "${dest.container.id}",
+				}
+			},
+			dest: {
+				type: 'k8s.deployment',
+				selector: {
+					"container.id": "${dest.container.id}",
+				}
+			},
+			attributes: [
+				{
+					aggregationType: "all",
+					name: 'container.name'
+				},
+				{
+					aggregationType: "any",
+					name: 'container.name'
+				}
+			]
+		}
+	]
 };
 
 export const discoveryKitError: DiscoveryKitError = {

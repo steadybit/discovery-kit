@@ -7,6 +7,12 @@ import (
 	"encoding/json"
 )
 
+// Defines values for AttributeAggregationType.
+const (
+	All AttributeAggregationType = "all"
+	Any AttributeAggregationType = "any"
+)
+
 // Defines values for DescribingEndpointReferenceMethod.
 const (
 	DescribingEndpointReferenceMethodGET DescribingEndpointReferenceMethod = "GET"
@@ -29,6 +35,15 @@ const (
 	ASC  OrderByDirection = "ASC"
 	DESC OrderByDirection = "DESC"
 )
+
+// Attribute defines model for Attribute.
+type Attribute struct {
+	AggregationType AttributeAggregationType `json:"aggregationType"`
+	Name            string                   `json:"name"`
+}
+
+// AttributeAggregationType defines model for Attribute.AggregationType.
+type AttributeAggregationType string
 
 // AttributeDescription defines model for AttributeDescription.
 type AttributeDescription struct {
@@ -135,6 +150,15 @@ type PluralLabel struct {
 	Other string `json:"other"`
 }
 
+// SourceOrDestination defines model for SourceOrDestination.
+type SourceOrDestination struct {
+	// To identify a source or a destination, we employ a mechanism similar to Kubernetes label selectors. When this instance represents a source, you can use the placeholder `${src.attribute}` to refer to target attributes of the destination. Note that you can use the placeholders `${src.attribute}` and `${dest.attribute}` respectively.
+	Selector map[string]string `json:"selector"`
+
+	// The source or destination target type.
+	Type string `json:"type"`
+}
+
 // Table defines model for Table.
 type Table struct {
 	Columns []Column  `json:"columns"`
@@ -159,7 +183,8 @@ type Target struct {
 // A definition of a target type and how it will be handled by the ui
 type TargetDescription struct {
 	// A human readable label categorizing the target type, e.g., 'cloud' or 'Kubernetes'.
-	Category *string `json:"category,omitempty"`
+	Category        *string                 `json:"category,omitempty"`
+	EnrichmentRules *[]TargetEnrichmentRule `json:"enrichmentRules,omitempty"`
 
 	// An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image.
 	Icon *string `json:"icon,omitempty"`
@@ -171,6 +196,13 @@ type TargetDescription struct {
 
 	// The version of the target type. Remember to increase the value everytime you update the definitions. The platform will ignore any definition changes with the same version. We do recommend usage of semver strings.
 	Version string `json:"version"`
+}
+
+// TargetEnrichmentRule defines model for TargetEnrichmentRule.
+type TargetEnrichmentRule struct {
+	Attributes []Attribute         `json:"attributes"`
+	Dest       SourceOrDestination `json:"dest"`
+	Src        SourceOrDestination `json:"src"`
 }
 
 // DescribeAttributesResponse defines model for DescribeAttributesResponse.

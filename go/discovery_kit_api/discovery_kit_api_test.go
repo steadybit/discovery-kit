@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+
 package discovery_kit_api
 
 import (
@@ -104,6 +107,32 @@ func TestTargetDescription(t *testing.T) {
 				},
 			},
 		},
+		EnrichmentRules: Ptr([]TargetEnrichmentRule{
+			{
+				Src: SourceOrDestination{
+					Type: "k8s.deployment",
+					Selector: map[string]string{
+						"container.id": "${dest.container.id}",
+					},
+				},
+				Dest: SourceOrDestination{
+					Type: "container",
+					Selector: map[string]string{
+						"container.id": "${src.container.id}",
+					},
+				},
+				Attributes: []Attribute{
+					{
+						AggregationType: Any,
+						Name:            "container.name",
+					},
+					{
+						AggregationType: All,
+						Name:            "container.name",
+					},
+				},
+			},
+		}),
 	}
 	markAsUsed(t, v)
 }

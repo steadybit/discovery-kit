@@ -215,6 +215,50 @@ components:
       required:
        - columns
        - orderBy
+    Attribute:
+      type: object
+      properties:
+        name:
+          type: string
+        aggregationType:
+          type: string
+          enum:
+            - any
+            - all
+      required:
+        - name
+        - aggregationType
+    SourceOrDestination:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The source or destination target type.
+        selector:
+          type: object
+          description: To identify a source or a destination, we employ a mechanism similar to Kubernetes label selectors. When this instance represents a source, you can use the placeholder `${src.attribute}` to refer to target attributes of the destination. Note that you can use the placeholders `${src.attribute}` and `${dest.attribute}` respectively.
+          additionalProperties:
+            type: string
+            description: TODO
+      required:
+        - type
+        - selector
+    TargetEnrichmentRule:
+      type: object
+      properties:
+        src:
+          $ref: '#/components/schemas/SourceOrDestination'
+        dest:
+          $ref: '#/components/schemas/SourceOrDestination'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+          uniqueItems: true
+      required:
+        - src
+        - dest
+        - attributes
     TargetDescription:
       type: object
       description: "A definition of a target type and how it will be handled by the ui"
@@ -237,6 +281,11 @@ components:
           pattern: '^data:.*$'
         table:
           $ref: '#/components/schemas/Table'
+        enrichmentRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetEnrichmentRule'
+          uniqueItems: true
       required:
        - id
        - version

@@ -107,6 +107,22 @@ export interface components {
 			columns: components['schemas']['Column'][];
 			orderBy: components['schemas']['OrderBy'][];
 		};
+		Attribute: {
+			name: string;
+			/** @enum {string} */
+			aggregationType: 'any' | 'all';
+		};
+		SourceOrDestination: {
+			/** @description The source or destination target type. */
+			type: string;
+			/** @description To identify a source or a destination, we employ a mechanism similar to Kubernetes label selectors. When this instance represents a source, you can use the placeholder `${src.attribute}` to refer to target attributes of the destination. Note that you can use the placeholders `${src.attribute}` and `${dest.attribute}` respectively. */
+			selector: { [key: string]: string };
+		};
+		TargetEnrichmentRule: {
+			src: components['schemas']['SourceOrDestination'];
+			dest: components['schemas']['SourceOrDestination'];
+			attributes: components['schemas']['Attribute'][];
+		};
 		/** @description A definition of a target type and how it will be handled by the ui */
 		TargetDescription: {
 			/** @description a global unique name of the target type */
@@ -119,6 +135,7 @@ export interface components {
 			/** @description An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image. */
 			icon?: string;
 			table: components['schemas']['Table'];
+			enrichmentRules?: components['schemas']['TargetEnrichmentRule'][];
 		};
 	};
 	responses: {
