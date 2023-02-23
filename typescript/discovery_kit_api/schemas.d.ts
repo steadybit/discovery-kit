@@ -110,6 +110,8 @@ export interface components {
 		Attribute: {
 			name: string;
 			/** @enum {string} */
+			matcher: 'equals' | 'contains' | 'starts_with';
+			/** @enum {string} */
 			aggregationType: 'any' | 'all';
 		};
 		SourceOrDestination: {

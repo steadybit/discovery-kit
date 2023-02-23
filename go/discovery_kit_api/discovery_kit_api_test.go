@@ -124,10 +124,12 @@ func TestTargetDescription(t *testing.T) {
 				Attributes: []Attribute{
 					{
 						AggregationType: Any,
+						Matcher:         Equals,
 						Name:            "container.name",
 					},
 					{
 						AggregationType: All,
+						Matcher:         Equals,
 						Name:            "container.name",
 					},
 				},

@@ -13,6 +13,13 @@ const (
 	Any AttributeAggregationType = "any"
 )
 
+// Defines values for AttributeMatcher.
+const (
+	Contains   AttributeMatcher = "contains"
+	Equals     AttributeMatcher = "equals"
+	StartsWith AttributeMatcher = "starts_with"
+)
+
 // Defines values for DescribingEndpointReferenceMethod.
 const (
 	DescribingEndpointReferenceMethodGET DescribingEndpointReferenceMethod = "GET"
@@ -39,11 +46,15 @@ const (
 // Attribute defines model for Attribute.
 type Attribute struct {
 	AggregationType AttributeAggregationType `json:"aggregationType"`
+	Matcher         AttributeMatcher         `json:"matcher"`
 	Name            string                   `json:"name"`
 }
 
 // AttributeAggregationType defines model for Attribute.AggregationType.
 type AttributeAggregationType string
+
+// AttributeMatcher defines model for Attribute.Matcher.
+type AttributeMatcher string
 
 // AttributeDescription defines model for AttributeDescription.
 type AttributeDescription struct {

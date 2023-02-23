@@ -220,6 +220,12 @@ components:
       properties:
         name:
           type: string
+        matcher:
+          type: string
+          enum:
+            - equals
+            - contains
+            - starts_with
         aggregationType:
           type: string
           enum:
@@ -227,6 +233,7 @@ components:
             - all
       required:
         - name
+        - matcher
         - aggregationType
     SourceOrDestination:
       type: object
