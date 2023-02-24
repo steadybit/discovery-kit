@@ -226,15 +226,9 @@ components:
             - equals
             - contains
             - starts_with
-        aggregationType:
-          type: string
-          enum:
-            - any
-            - all
       required:
         - name
         - matcher
-        - aggregationType
     SourceOrDestination:
       type: object
       properties:
