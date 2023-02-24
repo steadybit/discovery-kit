@@ -106,12 +106,10 @@ export const targetDescription: TargetDescription = {
 			},
 			attributes: [
 				{
-					aggregationType: "all",
 					matcher:"equals",
 					name: 'container.name'
 				},
 				{
-					aggregationType: "any",
 					matcher:"equals",
 					name: 'container.name'
 				}

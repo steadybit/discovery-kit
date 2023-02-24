@@ -7,12 +7,6 @@ import (
 	"encoding/json"
 )
 
-// Defines values for AttributeAggregationType.
-const (
-	All AttributeAggregationType = "all"
-	Any AttributeAggregationType = "any"
-)
-
 // Defines values for AttributeMatcher.
 const (
 	Contains   AttributeMatcher = "contains"
@@ -45,13 +39,9 @@ const (
 
 // Attribute defines model for Attribute.
 type Attribute struct {
-	AggregationType AttributeAggregationType `json:"aggregationType"`
-	Matcher         AttributeMatcher         `json:"matcher"`
-	Name            string                   `json:"name"`
+	Matcher AttributeMatcher `json:"matcher"`
+	Name    string           `json:"name"`
 }
-
-// AttributeAggregationType defines model for Attribute.AggregationType.
-type AttributeAggregationType string
 
 // AttributeMatcher defines model for Attribute.Matcher.
 type AttributeMatcher string

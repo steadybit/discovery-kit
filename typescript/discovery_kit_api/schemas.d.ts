@@ -111,8 +111,6 @@ export interface components {
 			name: string;
 			/** @enum {string} */
 			matcher: 'equals' | 'contains' | 'starts_with';
-			/** @enum {string} */
-			aggregationType: 'any' | 'all';
 		};
 		SourceOrDestination: {
 			/** @description The source or destination target type. */
