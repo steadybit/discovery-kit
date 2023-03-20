@@ -1,6 +1,6 @@
 # Changelog
 
-## UNRELEASED
+## 1.2.0
 
  - Support target enrichment rules.
 
