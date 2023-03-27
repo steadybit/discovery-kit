@@ -74,7 +74,7 @@ You can specify multiple target enrichment rules as part of every target type de
 
 Source and destination target selectors are required. These selectors facilitate matching between two targets. In our example, they express that a source EC2 instance's `aws-ec2.hostname` attribute must match a destination container's `container.host` attribute.
 
-This concept is similar to [Kubernetes label selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/.
+This concept is similar to [Kubernetes label selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/).
 
 Note that `$.enrichmentRules[*].src.type` and `$.enrichmentRules[*].dest.type` do not have to match `$.id`. This means that you could even implement multiple-consecutive copy operations.
 
