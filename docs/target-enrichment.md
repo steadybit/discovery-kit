@@ -17,13 +17,13 @@ Let us start with a more detailed example before diving into the implementation 
 
 ### Use Case
 
-We assume we want to attack containers within a specific AWS availability zone. For example, we could stop or stress containers within zone eu-central-1b. However, containers have no native concept of availability zones! So how could we write a target selector for a zone? This is where target enrichments come in!
+We assume we want to attack containers within a specific AWS availability zone. For example, we could stop or stress containers within zone `eu-central-1b`. However, containers have no native concept of availability zones! So how could we write a target selector for a zone? This is where target enrichments come in!
 
 We do know that containers are running on EC2 instances and that those instances carry the attributes we desire. Suppose we copy the attributes from the EC2 instance target to (only those) containers running on that instance. In that case, we can leverage the AWS-specific attributes for container actions in experiments!
 
 ### Implementation
 
-Now, how would we do this? The logic for the EC2 instance discovery resides in the EC2 extension and not within our fictitious Docker container extension. Also, what about GCP, Azure et al., that we also want to support down the road? This is where target enrichment rules come in!
+Now, how would we do this? The logic for the EC2 instance discovery resides in the AWS extension and not within our fictitious Docker container extension. Also, what about GCP, Azure et al., that we also want to support down the road? This is where target enrichment rules come in!
 
 Target enrichment rules can be defined as part of the target type description. Let us first see the full implementation, and then we will dissect it.
 
