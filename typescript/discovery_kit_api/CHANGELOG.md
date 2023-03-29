@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+ - Removed restriction of discoveries to AWS agents.
+
 ## 1.2.0
 
  - Support target enrichment rules.
