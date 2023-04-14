@@ -16,5 +16,3 @@ We recommend that you read the following documentation to get started with Disco
 - [Discovery Registration](/docs/discovery-registration.md)
 
 - [Terminology](/docs/terminology.md)
-
-- [Examples](/docs/examples.md)
