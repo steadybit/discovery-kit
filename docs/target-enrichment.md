@@ -6,7 +6,7 @@ Targets carry attributes. Through these attributes, the targets are labeled and 
 
 In the following cases, you may choose to leverage target enrichments:
 
- - Adding attributes to targets reported by extensions that you do not maintain.
+- Adding attributes to targets reported by extensions that you do not maintain.
 - Adding attributes to targets reported by your extension
   - without duplicating the attribute-gathering logic
   - copying attributes from targets reported outside your extension
@@ -25,52 +25,42 @@ We do know that containers are running on EC2 instances and that those instances
 
 Now, how would we do this? The logic for the EC2 instance discovery resides in the AWS extension and not within our fictitious Docker container extension. Also, what about GCP, Azure et al., that we also want to support down the road? This is where target enrichment rules come in!
 
-Target enrichment rules can be defined as part of the target type description. Let us first see the full implementation, and then we will dissect it.
+Target enrichment rules can be defined by as part of a Target enrichment rule set which can be added to [the root of your discovery](./discovery-api.md#target-enrichment-rules). Let us first see the full implementation, and then we will dissect it.
 
 ```yaml
 {
-  "id": "container",
+  "id": "com.steadybit.extension_aws.aws.ec2-to-container",
   "version": "1.0.0",
-  "label": {
-    "one": "Container",
-    "other": "Containers"
+  "src": {
+    "type": "com.steadybit.extension_aws.aws.ec2-instance",
+    "selector": {
+      "aws-ec2.hostname": "${dest.container.host}"
+    }
   },
-  "icon": "data:image/svg+xml;base64,...",
-  "table": {
-    # ...
+  "dest": {
+    "type": "com.steadybit.extension_container.container",
+    "selector": {
+      "container.host": "${src.aws-ec2.hostname}"
+    }
   },
-  "enrichmentRules": [{
-    "src": {
-      "type": "ec2-instance",
-      "selector": {
-        "aws-ec2.hostname": "${dest.container.host}"
-      }
+  "attributes": [
+    {
+      "matcher": "EQUALS",
+      "name": "aws.account"
     },
-    "dest": {
-      "type": "container",
-      "selector": {
-        "container.host": "${src.aws-ec2.hostname}"
-      }
+    {
+      "matcher": "EQUALS",
+      "name": "aws.region"
     },
-    "attributes": [
-      {
-        "matcher": "equals",
-        "name": "aws.account"
-      },
-      {
-        "matcher": "equals",
-        "name": "aws.region"
-      },
-      {
-        "matcher": "equals",
-        "name": "aws.zone"
-      }
-    ]
-  }]
+    {
+      "matcher": "EQUALS",
+      "name": "aws.zone"
+    }
+  ]
 }
 ```
 
-You can specify multiple target enrichment rules as part of every target type description. This example defines a rule that copies the attributes `aws.account`, `aws.region` and `aws.zone` from EC2 instances (`src.type`) to containers (`dest.type`).
+This example defines a rule that copies the attributes `aws.account`, `aws.region` and `aws.zone` from EC2 instances (`src.type`) to containers (`dest.type`).
 
 Source and destination target selectors are required. These selectors facilitate matching between two targets. In our example, they express that a source EC2 instance's `aws-ec2.hostname` attribute must match a destination container's `container.host` attribute.
 

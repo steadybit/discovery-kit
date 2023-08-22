@@ -50,6 +50,11 @@ This endpoint needs to be [registered with Steadybit agents](./discovery-registr
     {
       "path": "/targetattributes/pets"
     }
+  ],
+  "targetEnrichmentRules": [
+    {
+      "path": "/enrichmentrules/owner-to-cat"
+    }
   ]
 }
 ```
@@ -110,7 +115,7 @@ Target types are versioned strictly, and Steadybit will ignore definition change
 
 // Response: 200
 {
-  "id": "cat",
+  "id": "com.steadybit.extension-pets.cat",
   "version": "1.0.0",
   "label": {
     "one": "cat",
@@ -187,9 +192,56 @@ You can provide a list of attribute definitions. The platform will use these att
 - [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `AttributeDescriptions`
 - [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `AttributeDescriptions`
 
+## Target Enrichment Rules
+
+You can define a set of Target Enrichment Rules. Details about target enrichment can be found [here](./target-enrichment.md).
+
+### Versioning
+
+Target Enrichment Rulesets are versioned strictly, and Steadybit will ignore definition changes for the same version. Remember to update the version every time you update the target type description.
+
+### Example
+
+```json
+// Request: GET /enrichmentrules/owner-to-cat
+
+// Response: 200
+{
+  "id": "com.steadybit.extension-pets.owner-to-cat",
+  "version": "1.0.0",
+  "src": {
+    "type": "com.steadybit.extension-pets.owner",
+    "selector": {
+      "owner.id": "${dest.pet.owner.id}"
+    }
+  },
+  "dest": {
+    "type": "com.steadybit.extension-pets.cat",
+    "selector": {
+      "pet.owner.id": "${src.owner.id}"
+    }
+  },
+  "attributes": [
+    {
+      "matcher": "EQUALS",
+      "name": "owner.name"
+    },
+    {
+      "matcher": "EQUALS",
+      "name": "owner.address"
+    }
+  ]
+}
+```
+
+### References
+
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `TargetDescription`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `TargetDescription`
+
 ## Discovery Execution
 
-Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` provided in the discovery description. The endpoint needs to return a list of all discovered targets.
+Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` provided in the discovery description. The endpoint needs to return a list of all discovered targets or enrichment data.
 
 ### Example
 
@@ -202,7 +254,7 @@ Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` p
     {
       "id": "garfield",
       "label": "Garfield",
-      "targetType": "cat",
+      "targetType": "com.steadybit.extension-pets.cat",
       "attributes": {
         "pet.name": [
           "Garfield"
@@ -218,7 +270,7 @@ Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` p
     {
       "id": "kitty",
       "label": "Kitty",
-      "targetType": "cat",
+      "targetType": "com.steadybit.extension-pets.cat",
       "attributes": {
         "pet.name": [
           "Kitty"
@@ -237,5 +289,5 @@ Discoveries are scheduled by the agent. Steadybit will use the `callIntervall` p
 
 ### References
 
-- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `DiscoveredTargets`
-- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `DiscoveredTargets`
+- [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `DiscoveryData`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `DiscoveryData`

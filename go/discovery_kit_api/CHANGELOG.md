@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Breaking: `enrichmentRules` are no longer an attribute of TargetDescription. Instead, they are now a first level entity as part of `DiscoveryList`. As part of the move to an own entity, `TargetEnrichmentRule` needs an `id` and a `version` attribute.
+- Discoveries can now return `enrichmentData` besides `targets`
+
 ## 1.3.0
 
 - Removed restriction of discoveries to AWS agents.

@@ -93,9 +93,15 @@ type DescribingEndpointReferenceWithCallInterval struct {
 // HTTP method to use when calling the HTTP endpoint.
 type DescribingEndpointReferenceWithCallIntervalMethod string
 
-// The results of a discovery call
+// Deprecated: use `DiscoveryData` instead. The results of a discovery call.
 type DiscoveredTargets struct {
 	Targets []Target `json:"targets"`
+}
+
+// The results of a discovery call
+type DiscoveryData struct {
+	EnrichmentData *[]EnrichmentData `json:"enrichmentData,omitempty"`
+	Targets        *[]Target         `json:"targets,omitempty"`
 }
 
 // Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.
@@ -130,9 +136,22 @@ type DiscoveryKitError struct {
 
 // Lists all discoveries that the platform/agent could execute.
 type DiscoveryList struct {
-	Discoveries      []DescribingEndpointReference `json:"discoveries"`
-	TargetAttributes []DescribingEndpointReference `json:"targetAttributes"`
-	TargetTypes      []DescribingEndpointReference `json:"targetTypes"`
+	Discoveries           []DescribingEndpointReference `json:"discoveries"`
+	TargetAttributes      []DescribingEndpointReference `json:"targetAttributes"`
+	TargetEnrichmentRules []DescribingEndpointReference `json:"targetEnrichmentRules"`
+	TargetTypes           []DescribingEndpointReference `json:"targetTypes"`
+}
+
+// A single discovered enrichment data
+type EnrichmentData struct {
+	// These attributes contains the actual data provided through the discovery.  These attributes are used to find matching targets and can be copied to a target.
+	Attributes map[string][]string `json:"attributes"`
+
+	// The type of the enrichment data. Will be used to find matching targets to enrich data.
+	EnrichmentDataType string `json:"enrichmentDataType"`
+
+	// The id of the enrichment data, needs to be unique per agent and enrichment data type.
+	Id string `json:"id"`
 }
 
 // OrderBy defines model for OrderBy.
@@ -183,8 +202,7 @@ type Target struct {
 // A definition of a target type and how it will be handled by the ui
 type TargetDescription struct {
 	// A human readable label categorizing the target type, e.g., 'cloud' or 'Kubernetes'.
-	Category        *string                 `json:"category,omitempty"`
-	EnrichmentRules *[]TargetEnrichmentRule `json:"enrichmentRules,omitempty"`
+	Category *string `json:"category,omitempty"`
 
 	// An icon that is used to identify the targets in the ui. Needs to be a data-uri containing an image.
 	Icon *string `json:"icon,omitempty"`
@@ -198,15 +216,26 @@ type TargetDescription struct {
 	Version string `json:"version"`
 }
 
-// TargetEnrichmentRule defines model for TargetEnrichmentRule.
+// A rule describing how to enrich a target with data from another target or from enrichment data
 type TargetEnrichmentRule struct {
 	Attributes []Attribute         `json:"attributes"`
 	Dest       SourceOrDestination `json:"dest"`
-	Src        SourceOrDestination `json:"src"`
+
+	// a global unique name of the enrichment rule
+	Id  string              `json:"id"`
+	Src SourceOrDestination `json:"src"`
+
+	// The version of the enrichment rule. Remember to increase the value everytime you update the definitions. The platform will ignore any definition changes with the same version. We do recommend usage of semver strings.
+	Version string `json:"version"`
 }
 
 // DescribeAttributesResponse defines model for DescribeAttributesResponse.
 type DescribeAttributesResponse struct {
+	union json.RawMessage
+}
+
+// DescribeTargetEnrichmentRulesResponse defines model for DescribeTargetEnrichmentRulesResponse.
+type DescribeTargetEnrichmentRulesResponse struct {
 	union json.RawMessage
 }
 
@@ -225,8 +254,8 @@ type DiscoveryListResponse struct {
 	union json.RawMessage
 }
 
-// TargetDiscoveryResponse defines model for TargetDiscoveryResponse.
-type TargetDiscoveryResponse struct {
+// DiscoveryResponse defines model for DiscoveryResponse.
+type DiscoveryResponse struct {
 	union json.RawMessage
 }
 
@@ -260,6 +289,40 @@ func (t DescribeAttributesResponse) MarshalJSON() ([]byte, error) {
 }
 
 func (t *DescribeAttributesResponse) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+func (t DescribeTargetEnrichmentRulesResponse) AsTargetEnrichmentRule() (TargetEnrichmentRule, error) {
+	var body TargetEnrichmentRule
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *DescribeTargetEnrichmentRulesResponse) FromTargetEnrichmentRule(v TargetEnrichmentRule) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+func (t DescribeTargetEnrichmentRulesResponse) AsDiscoveryKitError() (DiscoveryKitError, error) {
+	var body DiscoveryKitError
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *DescribeTargetEnrichmentRulesResponse) FromDiscoveryKitError(v DiscoveryKitError) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+func (t DescribeTargetEnrichmentRulesResponse) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *DescribeTargetEnrichmentRulesResponse) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
@@ -366,36 +429,36 @@ func (t *DiscoveryListResponse) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (t TargetDiscoveryResponse) AsDiscoveredTargets() (DiscoveredTargets, error) {
-	var body DiscoveredTargets
+func (t DiscoveryResponse) AsDiscoveryData() (DiscoveryData, error) {
+	var body DiscoveryData
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-func (t *TargetDiscoveryResponse) FromDiscoveredTargets(v DiscoveredTargets) error {
+func (t *DiscoveryResponse) FromDiscoveryData(v DiscoveryData) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-func (t TargetDiscoveryResponse) AsDiscoveryKitError() (DiscoveryKitError, error) {
+func (t DiscoveryResponse) AsDiscoveryKitError() (DiscoveryKitError, error) {
 	var body DiscoveryKitError
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-func (t *TargetDiscoveryResponse) FromDiscoveryKitError(v DiscoveryKitError) error {
+func (t *DiscoveryResponse) FromDiscoveryKitError(v DiscoveryKitError) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-func (t TargetDiscoveryResponse) MarshalJSON() ([]byte, error) {
+func (t DiscoveryResponse) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
-func (t *TargetDiscoveryResponse) UnmarshalJSON(b []byte) error {
+func (t *DiscoveryResponse) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

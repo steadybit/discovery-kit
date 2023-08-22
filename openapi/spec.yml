@@ -35,6 +35,7 @@ components:
         - discoveries
         - targetTypes
         - targetAttributes
+        - targetEnrichmentRules
     DiscoveryDescription:
       title: Discovery Description
       description: Provides details about a discovery, e.g., what endpoint needs to be called to discover targets.
@@ -164,9 +165,35 @@ components:
         - label
         - targetType
         - attributes
+    EnrichmentData:
+      type: object
+      description: A single discovered enrichment data
+      properties:
+        id:
+          type: string
+          description: "The id of the enrichment data, needs to be unique per agent and enrichment data type."
+        enrichmentDataType:
+          type: string
+          description: "The type of the enrichment data. Will be used to find matching targets to enrich data."
+        attributes:
+          type: object
+          description: >-
+            These attributes contains the actual data provided through the discovery. 
+            These attributes are used to find matching targets and can be copied to a target.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+        - id
+        - enrichmentDataType
+        - attributes
     DiscoveredTargets:
       type: object
-      description: The results of a discovery call
+      deprecated: true
+      description: >-
+        Deprecated: use `DiscoveryData` instead.
+        The results of a discovery call.
       properties:
         targets:
           type: array
@@ -174,6 +201,18 @@ components:
             $ref: '#/components/schemas/Target'
       required:
         - targets
+    DiscoveryData:
+      type: object
+      description: The results of a discovery call
+      properties:
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Target'
+        enrichmentData:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnrichmentData'
     OrderBy:
       type: object
       properties:
@@ -245,7 +284,14 @@ components:
         - selector
     TargetEnrichmentRule:
       type: object
+      description: A rule describing how to enrich a target with data from another target or from enrichment data
       properties:
+        id:
+          type: string
+          description: "a global unique name of the enrichment rule"
+        version:
+          type: string
+          description: "The version of the enrichment rule. Remember to increase the value everytime you update the definitions. The platform will ignore any definition changes with the same version. We do recommend usage of semver strings."
         src:
           $ref: '#/components/schemas/SourceOrDestination'
         dest:
@@ -256,6 +302,8 @@ components:
             $ref: '#/components/schemas/Attribute'
           uniqueItems: true
       required:
+        - id
+        - version
         - src
         - dest
         - attributes
@@ -281,11 +329,6 @@ components:
           pattern: '^data:.*$'
         table:
           $ref: '#/components/schemas/Table'
-        enrichmentRules:
-          type: array
-          items:
-            $ref: '#/components/schemas/TargetEnrichmentRule'
-          uniqueItems: true
       required:
        - id
        - version
@@ -319,21 +362,30 @@ components:
             anyOf:
               - $ref: '#/components/schemas/AttributeDescriptions'
               - $ref: '#/components/schemas/DiscoveryKitError'
-    TargetDiscoveryResponse:
-      title: Target Discovery Response
+    DiscoveryResponse:
+      title: Discovery Response
       description: The results of a discovery call
       content:
         application/json:
           schema:
             anyOf:
-              - $ref: '#/components/schemas/DiscoveredTargets'
+              - $ref: '#/components/schemas/DiscoveryData'
               - $ref: '#/components/schemas/DiscoveryKitError'
     DescribeTargetResponse:
       title: Target Description Response
-      description: The results of a discovery call
+      description: The results of a target description call
       content:
         application/json:
           schema:
             anyOf:
               - $ref: '#/components/schemas/TargetDescription'
+              - $ref: '#/components/schemas/DiscoveryKitError'
+    DescribeTargetEnrichmentRulesResponse:
+      title: Target Enrichment Rule Response
+      description: The results of a enrichment rule call
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/TargetEnrichmentRule'
               - $ref: '#/components/schemas/DiscoveryKitError'

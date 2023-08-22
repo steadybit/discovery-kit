@@ -83,6 +83,27 @@ func TestDiscoveredTargets(t *testing.T) {
 	markAsUsed(t, v)
 }
 
+func TestDiscoveryData(t *testing.T) {
+	v := DiscoveryData{
+		Targets: &[]Target{
+			{
+				Attributes: make(map[string][]string),
+				Id:         "i",
+				Label:      "l",
+				TargetType: "t",
+			},
+		},
+		EnrichmentData: &[]EnrichmentData{
+			{
+				Attributes:         make(map[string][]string),
+				Id:                 "i",
+				EnrichmentDataType: "t",
+			},
+		},
+	}
+	markAsUsed(t, v)
+}
+
 func TestTargetDescription(t *testing.T) {
 	v := TargetDescription{
 		Category: Ptr("basic"),
@@ -107,32 +128,6 @@ func TestTargetDescription(t *testing.T) {
 				},
 			},
 		},
-		EnrichmentRules: Ptr([]TargetEnrichmentRule{
-			{
-				Src: SourceOrDestination{
-					Type: "k8s.deployment",
-					Selector: map[string]string{
-						"container.id": "${dest.container.id}",
-					},
-				},
-				Dest: SourceOrDestination{
-					Type: "container",
-					Selector: map[string]string{
-						"container.id": "${src.container.id}",
-					},
-				},
-				Attributes: []Attribute{
-					{
-						Matcher: Equals,
-						Name:    "container.name",
-					},
-					{
-						Matcher: Equals,
-						Name:    "container.name",
-					},
-				},
-			},
-		}),
 	}
 	markAsUsed(t, v)
 }
