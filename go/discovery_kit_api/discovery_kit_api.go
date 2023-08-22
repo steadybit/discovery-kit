@@ -136,10 +136,9 @@ type DiscoveryKitError struct {
 
 // Lists all discoveries that the platform/agent could execute.
 type DiscoveryList struct {
-	Discoveries           []DescribingEndpointReference `json:"discoveries"`
-	TargetAttributes      []DescribingEndpointReference `json:"targetAttributes"`
-	TargetEnrichmentRules []DescribingEndpointReference `json:"targetEnrichmentRules"`
-	TargetTypes           []DescribingEndpointReference `json:"targetTypes"`
+	Discoveries      []DescribingEndpointReference `json:"discoveries"`
+	TargetAttributes []DescribingEndpointReference `json:"targetAttributes"`
+	TargetTypes      []DescribingEndpointReference `json:"targetTypes"`
 }
 
 // A single discovered enrichment data
