@@ -31,6 +31,11 @@ components:
           items:
             $ref: '#/components/schemas/DescribingEndpointReference'
           uniqueItems: true
+        targetEnrichmentRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescribingEndpointReference'
+          uniqueItems: true
       required:
         - discoveries
         - targetTypes
