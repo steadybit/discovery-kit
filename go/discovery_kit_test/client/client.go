@@ -13,6 +13,7 @@ type DiscoveryAPI interface {
 	DiscoverEnrichmentData(discoveryId string) ([]discovery_kit_api.EnrichmentData, error)
 
 	ListDiscoveries() (discovery_kit_api.DiscoveryList, error)
+	Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error)
 	DescribeDiscovery(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.DiscoveryDescription, error)
 	DescribeTarget(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetDescription, error)
 	DescribeAttributes(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.AttributeDescriptions, error)
@@ -58,7 +59,7 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 		}
 
 		if description.Id == discoveryId {
-			data, err = c.discover(discovery)
+			data, err = c.Discover(description.Discover)
 			return data, err
 		}
 	}
@@ -66,9 +67,9 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 	return data, fmt.Errorf("discovery with id %s not found", discoveryId)
 }
 
-func (c *clientImpl) discover(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.DiscoveryData, error) {
+func (c *clientImpl) Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error) {
 	var data discovery_kit_api.DiscoveryData
-	err := c.executeWitResult(ref, &data)
+	err := c.executeWitResult(discovery_kit_api.DescribingEndpointReference{Method: discovery_kit_api.DescribingEndpointReferenceMethod(ref.Method), Path: ref.Path}, &data)
 	return data, err
 }
 

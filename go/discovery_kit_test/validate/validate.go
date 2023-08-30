@@ -15,7 +15,10 @@ func ValidateEndpointReferences(path string, restyClient *resty.Client) error {
 	allErr = errors.Join(allErr, err)
 
 	for _, discovery := range list.Discoveries {
-		_, err := c.DescribeDiscovery(discovery)
+		description, err := c.DescribeDiscovery(discovery)
+		if err == nil {
+			_, err = c.Discover(description.Discover)
+		}
 		allErr = errors.Join(allErr, err)
 	}
 
