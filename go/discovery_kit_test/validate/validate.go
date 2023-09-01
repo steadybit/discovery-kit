@@ -1,15 +1,14 @@
 package validate
 
 import (
-	_ "embed"
 	"errors"
 	"github.com/go-resty/resty/v2"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_test/client"
 )
 
 func ValidateEndpointReferences(path string, restyClient *resty.Client) error {
-	var allErr error
 	c := client.NewDiscoveryClient(path, restyClient)
+	var allErr error
 
 	list, err := c.ListDiscoveries()
 	allErr = errors.Join(allErr, err)
@@ -37,8 +36,8 @@ func ValidateEndpointReferences(path string, restyClient *resty.Client) error {
 		allErr = errors.Join(allErr, err)
 	}
 
-	for _, attribute := range list.TargetEnrichmentRules {
-		_, err := c.DescribeAttributes(attribute)
+	for _, rules := range list.TargetEnrichmentRules {
+		_, err := c.DescribeEnrichmentRule(rules)
 		allErr = errors.Join(allErr, err)
 	}
 
