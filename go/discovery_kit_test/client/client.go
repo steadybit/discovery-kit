@@ -1,7 +1,10 @@
 package client
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-resty/resty/v2"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"golang.org/x/text/cases"
@@ -23,10 +26,16 @@ type DiscoveryAPI interface {
 type clientImpl struct {
 	client   *resty.Client
 	rootPath string
+	spec     *openapi3.T
 }
 
 func NewDiscoveryClient(rootPath string, client *resty.Client) DiscoveryAPI {
-	return &clientImpl{client: client, rootPath: rootPath}
+	spec, _ := discovery_kit_api.GetSwagger()
+	return &clientImpl{
+		client:   client,
+		rootPath: rootPath,
+		spec:     spec,
+	}
 }
 
 func (c *clientImpl) DiscoverTargets(discoveryId string) ([]discovery_kit_api.Target, error) {
@@ -69,41 +78,45 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 
 func (c *clientImpl) Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error) {
 	var data discovery_kit_api.DiscoveryData
-	err := c.executeWitResult(discovery_kit_api.DescribingEndpointReference{Method: discovery_kit_api.DescribingEndpointReferenceMethod(ref.Method), Path: ref.Path}, &data)
+	err := c.executeAndValidateWitResult(
+		discovery_kit_api.DescribingEndpointReference{Method: discovery_kit_api.DescribingEndpointReferenceMethod(ref.Method), Path: ref.Path},
+		&data,
+		"DiscoveryData",
+	)
 	return data, err
 }
 
 func (c *clientImpl) ListDiscoveries() (discovery_kit_api.DiscoveryList, error) {
 	var list discovery_kit_api.DiscoveryList
-	err := c.executeWitResult(discovery_kit_api.DescribingEndpointReference{Path: c.rootPath}, &list)
+	err := c.executeAndValidateWitResult(discovery_kit_api.DescribingEndpointReference{Path: c.rootPath}, &list, "DiscoveryList")
 	return list, err
 }
 
 func (c *clientImpl) DescribeDiscovery(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.DiscoveryDescription, error) {
 	var description discovery_kit_api.DiscoveryDescription
-	err := c.executeWitResult(ref, &description)
+	err := c.executeAndValidateWitResult(ref, &description, "DiscoveryDescription")
 	return description, err
 }
 
 func (c *clientImpl) DescribeTarget(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetDescription, error) {
 	var description discovery_kit_api.TargetDescription
-	err := c.executeWitResult(ref, &description)
+	err := c.executeAndValidateWitResult(ref, &description, "TargetDescription")
 	return description, err
 }
 
 func (c *clientImpl) DescribeAttributes(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.AttributeDescriptions, error) {
 	var descriptions discovery_kit_api.AttributeDescriptions
-	err := c.executeWitResult(ref, &descriptions)
+	err := c.executeAndValidateWitResult(ref, &descriptions, "AttributeDescriptions")
 	return descriptions, err
 }
 
 func (c *clientImpl) DescribeEnrichmentRule(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetEnrichmentRule, error) {
 	var enrichmentRule discovery_kit_api.TargetEnrichmentRule
-	err := c.executeWitResult(ref, &enrichmentRule)
+	err := c.executeAndValidateWitResult(ref, &enrichmentRule, "TargetEnrichmentRule")
 	return enrichmentRule, err
 }
 
-func (c *clientImpl) executeWitResult(ref discovery_kit_api.DescribingEndpointReference, result interface{}) error {
+func (c *clientImpl) executeAndValidateWitResult(ref discovery_kit_api.DescribingEndpointReference, result interface{}, schemaName string) error {
 	method, path := getMethodAndPath(ref)
 	res, err := c.client.R().SetResult(result).Execute(method, path)
 	if err != nil {
@@ -111,6 +124,32 @@ func (c *clientImpl) executeWitResult(ref discovery_kit_api.DescribingEndpointRe
 	}
 	if !res.IsSuccess() {
 		return fmt.Errorf("%s %s failed: %d", method, path, res.StatusCode())
+	}
+
+	return c.validateResponseBody(schemaName, res.Body())
+}
+
+func (c *clientImpl) validateResponseBody(name string, body []byte) error {
+	if c.spec == nil || name == "" {
+		return nil
+	}
+
+	schema, ok := c.spec.Components.Schemas[name]
+	if !ok {
+		return fmt.Errorf("component schema '%s' not found", name)
+	}
+
+	var decoded interface{}
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	err := dec.Decode(&decoded)
+	if err != nil {
+		return fmt.Errorf("error decoding response body: %w", err)
+	}
+
+	err = schema.Value.VisitJSON(decoded, openapi3.VisitAsResponse())
+	if err != nil {
+		return fmt.Errorf("error validating response body using schema '%s': %w", name, err)
 	}
 	return nil
 }
