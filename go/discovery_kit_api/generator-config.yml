@@ -1,5 +1,6 @@
 package: discovery_kit_api
 generate:
   models: true
+  embedded-spec: true
 output-options:
   skip-prune: true
