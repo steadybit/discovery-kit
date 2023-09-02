@@ -78,7 +78,7 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 
 func (c *clientImpl) Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error) {
 	var data discovery_kit_api.DiscoveryData
-	err := c.executeAndValidateWitResult(
+	err := c.executeAndValidate(
 		discovery_kit_api.DescribingEndpointReference{Method: discovery_kit_api.DescribingEndpointReferenceMethod(ref.Method), Path: ref.Path},
 		&data,
 		"DiscoveryData",
@@ -88,42 +88,42 @@ func (c *clientImpl) Discover(ref discovery_kit_api.DescribingEndpointReferenceW
 
 func (c *clientImpl) ListDiscoveries() (discovery_kit_api.DiscoveryList, error) {
 	var list discovery_kit_api.DiscoveryList
-	err := c.executeAndValidateWitResult(discovery_kit_api.DescribingEndpointReference{Path: c.rootPath}, &list, "DiscoveryList")
+	err := c.executeAndValidate(discovery_kit_api.DescribingEndpointReference{Path: c.rootPath}, &list, "DiscoveryList")
 	return list, err
 }
 
 func (c *clientImpl) DescribeDiscovery(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.DiscoveryDescription, error) {
 	var description discovery_kit_api.DiscoveryDescription
-	err := c.executeAndValidateWitResult(ref, &description, "DiscoveryDescription")
+	err := c.executeAndValidate(ref, &description, "DiscoveryDescription")
 	return description, err
 }
 
 func (c *clientImpl) DescribeTarget(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetDescription, error) {
 	var description discovery_kit_api.TargetDescription
-	err := c.executeAndValidateWitResult(ref, &description, "TargetDescription")
+	err := c.executeAndValidate(ref, &description, "TargetDescription")
 	return description, err
 }
 
 func (c *clientImpl) DescribeAttributes(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.AttributeDescriptions, error) {
 	var descriptions discovery_kit_api.AttributeDescriptions
-	err := c.executeAndValidateWitResult(ref, &descriptions, "AttributeDescriptions")
+	err := c.executeAndValidate(ref, &descriptions, "AttributeDescriptions")
 	return descriptions, err
 }
 
 func (c *clientImpl) DescribeEnrichmentRule(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetEnrichmentRule, error) {
 	var enrichmentRule discovery_kit_api.TargetEnrichmentRule
-	err := c.executeAndValidateWitResult(ref, &enrichmentRule, "TargetEnrichmentRule")
+	err := c.executeAndValidate(ref, &enrichmentRule, "TargetEnrichmentRule")
 	return enrichmentRule, err
 }
 
-func (c *clientImpl) executeAndValidateWitResult(ref discovery_kit_api.DescribingEndpointReference, result interface{}, schemaName string) error {
+func (c *clientImpl) executeAndValidate(ref discovery_kit_api.DescribingEndpointReference, result interface{}, schemaName string) error {
 	method, path := getMethodAndPath(ref)
 	res, err := c.client.R().SetResult(result).Execute(method, path)
 	if err != nil {
 		return fmt.Errorf("%s %s failed: %w", method, path, err)
 	}
 	if !res.IsSuccess() {
-		return fmt.Errorf("%s %s failed: %d", method, path, res.StatusCode())
+		return fmt.Errorf("%s %s failed: %d %s", method, path, res.StatusCode(), res.Body())
 	}
 
 	return c.validateResponseBody(schemaName, res.Body())
