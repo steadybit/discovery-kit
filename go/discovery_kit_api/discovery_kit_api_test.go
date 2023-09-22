@@ -71,14 +71,14 @@ func TestAttributeDescriptions(t *testing.T) {
 
 func TestDiscoveredTargets(t *testing.T) {
 	v := DiscoveredTargets{
-		Targets: []Target{
+		Targets: ApplyDenyList([]Target{
 			{
 				Attributes: make(map[string][]string),
 				Id:         "i",
 				Label:      "l",
 				TargetType: "t",
 			},
-		},
+		}, nil),
 	}
 	markAsUsed(t, v)
 }
