@@ -2,19 +2,19 @@ package discovery_kit_api
 
 import "strings"
 
-func ApplyAttributeDenyList(targets []Target, denyList []string) []Target {
+func ApplyAttributeExcludes(targets []Target, denyList []string) []Target {
 	if denyList == nil || len(denyList) == 0 {
 		return targets
 	}
 	resultTargets := make([]Target, len(targets)) // we do not want to modify the original targets
 	for i, target := range targets {
 		resultTargets[i] = target
-		resultTargets[i].Attributes = applyDenyListToAttributes(target.Attributes, denyList)
+		resultTargets[i].Attributes = applyExcludesToAttributes(target.Attributes, denyList)
 	}
 	return resultTargets
 }
 
-func applyDenyListToAttributes(attributes map[string][]string, denyList []string) map[string][]string {
+func applyExcludesToAttributes(attributes map[string][]string, denyList []string) map[string][]string {
 	resultAttributes := make(map[string][]string) // we do not want to modify the original attributes
 	for key, _ := range attributes {
 		resultAttributes[key] = attributes[key]

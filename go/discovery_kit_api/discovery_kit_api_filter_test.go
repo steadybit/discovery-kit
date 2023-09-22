@@ -11,6 +11,9 @@ import (
 
 var targets = []Target{
 	{
+		Id:         "id1",
+		TargetType: "type1",
+		Label:      "label1",
 		Attributes: map[string][]string{
 			"key1":                      {"value1"},
 			"key2":                      {"value2"},
@@ -18,6 +21,9 @@ var targets = []Target{
 		},
 	},
 	{
+		Id:         "id2",
+		TargetType: "type2",
+		Label:      "label2",
 		Attributes: map[string][]string{
 			"key1":                      {"value1"},
 			"key2":                      {"value2"},
@@ -67,12 +73,18 @@ func TestApplyDenyList(t *testing.T) {
 			},
 			want: []Target{
 				{
+					Id:         "id1",
+					TargetType: "type1",
+					Label:      "label1",
 					Attributes: map[string][]string{
 						"key2":                      {"value2"},
 						"aws.ec2.label.Environment": {"production"},
 					},
 				},
 				{
+					Id:         "id2",
+					TargetType: "type2",
+					Label:      "label2",
 					Attributes: map[string][]string{
 						"key2":                      {"value2"},
 						"aws.account":               {"123456789012"},
@@ -96,11 +108,17 @@ func TestApplyDenyList(t *testing.T) {
 			},
 			want: []Target{
 				{
+					Id:         "id1",
+					TargetType: "type1",
+					Label:      "label1",
 					Attributes: map[string][]string{
 						"aws.ec2.label.Environment": {"production"},
 					},
 				},
 				{
+					Id:         "id2",
+					TargetType: "type2",
+					Label:      "label2",
 					Attributes: map[string][]string{
 						"aws.account":               {"123456789012"},
 						"aws.region":                {"eu-central-1"},
@@ -123,12 +141,18 @@ func TestApplyDenyList(t *testing.T) {
 			},
 			want: []Target{
 				{
+					Id:         "id1",
+					TargetType: "type1",
+					Label:      "label1",
 					Attributes: map[string][]string{
 						"key1": {"value1"},
 						"key2": {"value2"},
 					},
 				},
 				{
+					Id:         "id2",
+					TargetType: "type2",
+					Label:      "label2",
 					Attributes: map[string][]string{
 						"key1":        {"value1"},
 						"key2":        {"value2"},
@@ -146,12 +170,18 @@ func TestApplyDenyList(t *testing.T) {
 			},
 			want: []Target{
 				{
+					Id:         "id1",
+					TargetType: "type1",
+					Label:      "label1",
 					Attributes: map[string][]string{
 						"key1": {"value1"},
 						"key2": {"value2"},
 					},
 				},
 				{
+					Id:         "id2",
+					TargetType: "type2",
+					Label:      "label2",
 					Attributes: map[string][]string{
 						"key1":                    {"value1"},
 						"key2":                    {"value2"},
@@ -169,8 +199,8 @@ func TestApplyDenyList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ApplyAttributeDenyList(tt.args.targets, tt.args.denyList); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ApplyAttributeDenyList() = %v, want %v", got, tt.want)
+			if got := ApplyAttributeExcludes(tt.args.targets, tt.args.denyList); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ApplyAttributeExcludes() = %v, want %v", got, tt.want)
 			}
 		})
 	}
