@@ -169,8 +169,8 @@ func TestApplyDenyList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ApplyDenyList(tt.args.targets, tt.args.denyList); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ApplyDenyList() = %v, want %v", got, tt.want)
+			if got := ApplyAttributeDenyList(tt.args.targets, tt.args.denyList); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ApplyAttributeDenyList() = %v, want %v", got, tt.want)
 			}
 		})
 	}

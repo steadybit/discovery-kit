@@ -2,7 +2,7 @@ package discovery_kit_api
 
 import "strings"
 
-func ApplyDenyList(targets []Target, denyList []string) []Target {
+func ApplyAttributeDenyList(targets []Target, denyList []string) []Target {
 	if denyList == nil || len(denyList) == 0 {
 		return targets
 	}

@@ -71,7 +71,7 @@ func TestAttributeDescriptions(t *testing.T) {
 
 func TestDiscoveredTargets(t *testing.T) {
 	v := DiscoveredTargets{
-		Targets: ApplyDenyList([]Target{
+		Targets: ApplyAttributeDenyList([]Target{
 			{
 				Attributes: make(map[string][]string),
 				Id:         "i",

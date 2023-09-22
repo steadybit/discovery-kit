@@ -42,7 +42,7 @@ import (
 denyList := []string{"aws.label.*", "aws-ec2.instance.id"}] // From config or env variable
 
 func getTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-      exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: discovery_kit_api.ApplyDenyList(targets, denyList)})
+      exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: discovery_kit_api.ApplyAttributeDenyList(targets, denyList)})
 }
 ```
 
