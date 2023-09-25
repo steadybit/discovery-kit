@@ -300,7 +300,7 @@ import (
 excludes := []string{"aws.label.*", "aws-ec2.instance.id"}] // From config or env variable
 
 func getTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-      exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: discovery_kit_api.ApplyAttributeExcludes(targets, excludes)})
+      exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: discovery_kit_commons.ApplyAttributeExcludes(targets, excludes)})
 }
 ```
 
