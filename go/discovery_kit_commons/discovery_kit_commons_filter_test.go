@@ -2,14 +2,15 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package discovery_kit_api
+package discovery_kit_commons
 
 import (
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"reflect"
 	"testing"
 )
 
-var targets = []Target{
+var targets = []discovery_kit_api.Target{
 	{
 		Id:         "id1",
 		TargetType: "type1",
@@ -42,13 +43,13 @@ var targets = []Target{
 
 func TestApplyDenyList(t *testing.T) {
 	type args struct {
-		targets  []Target
+		targets  []discovery_kit_api.Target
 		denyList []string
 	}
 	tests := []struct {
 		name string
 		args args
-		want []Target
+		want []discovery_kit_api.Target
 	}{
 		{
 			name: "empty deny list",
@@ -71,7 +72,7 @@ func TestApplyDenyList(t *testing.T) {
 				targets:  targets,
 				denyList: []string{"key1"},
 			},
-			want: []Target{
+			want: []discovery_kit_api.Target{
 				{
 					Id:         "id1",
 					TargetType: "type1",
@@ -106,7 +107,7 @@ func TestApplyDenyList(t *testing.T) {
 				targets:  targets,
 				denyList: []string{"key*"},
 			},
-			want: []Target{
+			want: []discovery_kit_api.Target{
 				{
 					Id:         "id1",
 					TargetType: "type1",
@@ -139,7 +140,7 @@ func TestApplyDenyList(t *testing.T) {
 				targets:  targets,
 				denyList: []string{"key.*", "aws.ec2.*"},
 			},
-			want: []Target{
+			want: []discovery_kit_api.Target{
 				{
 					Id:         "id1",
 					TargetType: "type1",
@@ -168,7 +169,7 @@ func TestApplyDenyList(t *testing.T) {
 				targets:  targets,
 				denyList: []string{"aws.ec2.label.*"},
 			},
-			want: []Target{
+			want: []discovery_kit_api.Target{
 				{
 					Id:         "id1",
 					TargetType: "type1",
