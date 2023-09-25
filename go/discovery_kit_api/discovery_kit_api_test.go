@@ -71,14 +71,14 @@ func TestAttributeDescriptions(t *testing.T) {
 
 func TestDiscoveredTargets(t *testing.T) {
 	v := DiscoveredTargets{
-		Targets: ApplyAttributeExcludes([]Target{
+		Targets: []Target{
 			{
 				Attributes: make(map[string][]string),
 				Id:         "i",
 				Label:      "l",
 				TargetType: "t",
 			},
-		}, nil),
+		},
 	}
 	markAsUsed(t, v)
 }
