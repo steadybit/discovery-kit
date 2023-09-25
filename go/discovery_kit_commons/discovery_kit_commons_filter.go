@@ -6,7 +6,7 @@ import (
 )
 
 func ApplyAttributeExcludes(targets []discovery_kit_api.Target, denyList []string) []discovery_kit_api.Target {
-	if denyList == nil || len(denyList) == 0 {
+	if denyList == nil || (denyList != nil && len(denyList) == 0) {
 		return targets
 	}
 	resultTargets := make([]discovery_kit_api.Target, len(targets)) // we do not want to modify the original targets
@@ -18,7 +18,7 @@ func ApplyAttributeExcludes(targets []discovery_kit_api.Target, denyList []strin
 }
 
 func ApplyAttributeExcludesToEnrichmentData(targets []discovery_kit_api.EnrichmentData, denyList []string) []discovery_kit_api.EnrichmentData {
-	if denyList == nil || len(denyList) == 0 {
+	if denyList == nil || (denyList != nil && len(denyList) == 0) {
 		return targets
 	}
 	resultTargets := make([]discovery_kit_api.EnrichmentData, len(targets)) // we do not want to modify the original enrichment data
@@ -31,7 +31,7 @@ func ApplyAttributeExcludesToEnrichmentData(targets []discovery_kit_api.Enrichme
 
 func applyExcludesToAttributes(attributes map[string][]string, denyList []string) map[string][]string {
 	resultAttributes := make(map[string][]string) // we do not want to modify the original attributes
-	for key, _ := range attributes {
+	for key := range attributes {
 		resultAttributes[key] = attributes[key]
 		for _, denyListEntry := range denyList {
 			if strings.HasSuffix(denyListEntry, "*") {
