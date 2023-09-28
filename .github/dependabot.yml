@@ -1,0 +1,18 @@
+version: 2
+updates:
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+- package-ecosystem: "gomod"
+  directory: /go/discovery_kit_api
+  schedule:
+    interval: "weekly"
+- package-ecosystem: "gomod"
+  directory: /go/discovery_kit_commons
+  schedule:
+    interval: "weekly"
+- package-ecosystem: "gomod"
+  directory: /go/discovery_kit_test
+  schedule:
+    interval: "weekly"
