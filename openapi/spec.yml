@@ -84,6 +84,10 @@ components:
             problem.
       required:
         - title
+    ReadHttpMethod:
+      type: string
+      enum:
+        - GET
     DescribingEndpointReference:
       title: HTTP Endpoint Reference
       description: HTTP endpoint which the Steadybit platform/agent could communicate with.
@@ -94,9 +98,7 @@ components:
           pattern: ^/.*$
         method:
           description: HTTP method to use when calling the HTTP endpoint.
-          type: string
-          enum:
-            - GET
+          $ref: '#/components/schemas/ReadHttpMethod'
       required:
         - path
         - method
@@ -148,7 +150,7 @@ components:
       properties:
         id:
           type: string
-          description: "The id of the target, needs to be unique per agent and target type."
+          description: "The id of the target, needs to be unique per target type."
         label:
           type: string
           description: "A label, which will be used by the platform to display the target"
@@ -176,7 +178,7 @@ components:
       properties:
         id:
           type: string
-          description: "The id of the enrichment data, needs to be unique per agent and enrichment data type."
+          description: "The id of the enrichment data, needs to be unique per enrichment data type."
         enrichmentDataType:
           type: string
           description: "The type of the enrichment data. Will be used to find matching targets to enrich data."

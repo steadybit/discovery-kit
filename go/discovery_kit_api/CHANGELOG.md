@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+- Target Ids must be unique across target type
+-  Aligned Http Method constants
+
 ## 1.4.2
 - Embed the openapi spec into the api package
 
