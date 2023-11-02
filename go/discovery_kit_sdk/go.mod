@@ -1,14 +1,20 @@
-module github.com/steadybit/discovery-kit/go/discovery_kit_test
+module github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
 go 1.20
 
 require (
-	github.com/getkin/kin-openapi v0.120.0
 	github.com/go-resty/resty/v2 v2.10.0
-	github.com/jarcoal/httpmock v1.3.1
+	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
+	github.com/rs/zerolog v1.31.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.0
+	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.0.2
+	github.com/steadybit/extension-kit v1.8.9
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/text v0.13.0
+)
+
+replace (
+	github.com/steadybit/discovery-kit/go/discovery_kit_test => ../discovery_kit_test
+	github.com/steadybit/extension-kit => ../../../extension-kit
 )
 
 require (
@@ -28,6 +34,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/getkin/kin-openapi v0.120.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.9.1 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
@@ -50,6 +57,7 @@ require (
 	github.com/kataras/pio v0.0.12 // indirect
 	github.com/kataras/sitemap v0.0.6 // indirect
 	github.com/kataras/tunnel v0.0.4 // indirect
+	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/labstack/echo/v4 v4.11.2 // indirect
@@ -66,9 +74,11 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rs/xid v1.5.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/closestmatch v2.1.0+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/stretchr/objx v0.5.1 // indirect
 	github.com/tdewolff/minify/v2 v2.19.10 // indirect
 	github.com/tdewolff/parse/v2 v2.6.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -83,6 +93,7 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

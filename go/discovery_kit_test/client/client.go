@@ -12,10 +12,12 @@ import (
 )
 
 type DiscoveryAPI interface {
+	ListDiscoveries() (discovery_kit_api.DiscoveryList, error)
 	DiscoverTargets(discoveryId string) ([]discovery_kit_api.Target, error)
 	DiscoverEnrichmentData(discoveryId string) ([]discovery_kit_api.EnrichmentData, error)
+	DescribeTargetForId(targetTypeId string) (discovery_kit_api.TargetDescription, error)
+	DescribeAllAttributes() (discovery_kit_api.AttributeDescriptions, error)
 
-	ListDiscoveries() (discovery_kit_api.DiscoveryList, error)
 	Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error)
 	DescribeDiscovery(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.DiscoveryDescription, error)
 	DescribeTarget(ref discovery_kit_api.DescribingEndpointReference) (discovery_kit_api.TargetDescription, error)
@@ -41,17 +43,19 @@ func NewDiscoveryClient(rootPath string, client *resty.Client) DiscoveryAPI {
 func (c *clientImpl) DiscoverTargets(discoveryId string) ([]discovery_kit_api.Target, error) {
 	if d, err := c.discoverById(discoveryId); err != nil {
 		return nil, err
-	} else {
+	} else if d.Targets != nil {
 		return *d.Targets, nil
 	}
+	return nil, nil
 }
 
 func (c *clientImpl) DiscoverEnrichmentData(discoveryId string) ([]discovery_kit_api.EnrichmentData, error) {
 	if d, err := c.discoverById(discoveryId); err != nil {
 		return nil, err
-	} else {
+	} else if d.EnrichmentData != nil {
 		return *d.EnrichmentData, nil
 	}
+	return nil, nil
 }
 
 func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.DiscoveryData, error) {
@@ -61,8 +65,8 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 		return data, err
 	}
 
-	for _, discovery := range discoveries.Discoveries {
-		description, err := c.DescribeDiscovery(discovery)
+	for _, ref := range discoveries.Discoveries {
+		description, err := c.DescribeDiscovery(ref)
 		if err != nil {
 			return data, err
 		}
@@ -76,10 +80,51 @@ func (c *clientImpl) discoverById(discoveryId string) (discovery_kit_api.Discove
 	return data, fmt.Errorf("discovery with id %s not found", discoveryId)
 }
 
+func (c *clientImpl) DescribeAllAttributes() (discovery_kit_api.AttributeDescriptions, error) {
+	var data discovery_kit_api.AttributeDescriptions
+
+	discoveries, err := c.ListDiscoveries()
+	if err != nil {
+		return data, err
+	}
+
+	for _, ref := range discoveries.TargetAttributes {
+		attributes, err := c.DescribeAttributes(ref)
+		if err != nil {
+			return data, err
+		}
+
+		data.Attributes = append(data.Attributes, attributes.Attributes...)
+	}
+
+	return data, nil
+}
+
+func (c *clientImpl) DescribeTargetForId(targetTypeId string) (discovery_kit_api.TargetDescription, error) {
+	var empty discovery_kit_api.TargetDescription
+	discoveries, err := c.ListDiscoveries()
+	if err != nil {
+		return empty, err
+	}
+
+	for _, ref := range discoveries.TargetTypes {
+		description, err := c.DescribeTarget(ref)
+		if err != nil {
+			return empty, err
+		}
+
+		if description.Id == targetTypeId {
+			return description, err
+		}
+	}
+
+	return empty, fmt.Errorf("targetType with id %s not found", targetTypeId)
+}
+
 func (c *clientImpl) Discover(ref discovery_kit_api.DescribingEndpointReferenceWithCallInterval) (discovery_kit_api.DiscoveryData, error) {
 	var data discovery_kit_api.DiscoveryData
 	err := c.executeAndValidate(
-		discovery_kit_api.DescribingEndpointReference{Method: discovery_kit_api.DescribingEndpointReferenceMethod(ref.Method), Path: ref.Path},
+		discovery_kit_api.DescribingEndpointReference{Method: ref.Method, Path: ref.Path},
 		&data,
 		"DiscoveryData",
 	)
