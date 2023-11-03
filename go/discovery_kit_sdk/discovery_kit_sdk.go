@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	registeredDiscoveries                = make(map[string]Discovery)
-	registeredTargetDescriber            = make(map[string]TargetDescriber)
-	registeredAttributeDescriber         = make([]AttributeDescriber, 0)
-	registeredEnrichmentRulesContributor = make(map[string]EnrichmentRulesDescriber)
+	registeredDiscoveries                  = make(map[string]Discovery)
+	registeredTargetDescriber              = make(map[string]TargetDescriber)
+	registeredAttributeDescriber           = make([]AttributeDescriber, 0)
+	registeredEnrichmentRulesContributions = make(map[string]discovery_kit_api.TargetEnrichmentRule)
 )
 
 type Discovery interface {
@@ -47,8 +47,8 @@ type AttributeDescriber interface {
 }
 
 type EnrichmentRulesDescriber interface {
-	// ContributeEnrichmentRule returns a list of target enrichment rules.
-	DescribeEnrichmentRule() discovery_kit_api.TargetEnrichmentRule
+	// DescribeEnrichmentRules returns a list of target enrichment rules.
+	DescribeEnrichmentRules() []discovery_kit_api.TargetEnrichmentRule
 }
 
 type LastModifiedProvider interface {
@@ -113,9 +113,12 @@ func registerAttributeDescriber(o interface{}) bool {
 
 func registerEnrichmentRuleContributor(o interface{}) bool {
 	if d, ok := o.(EnrichmentRulesDescriber); ok {
-		id := d.DescribeEnrichmentRule().Id
-		registeredEnrichmentRulesContributor[id] = d
-		exthttp.RegisterHttpHandler(fmt.Sprintf("/discovery/enrichment-rules/%s", id), exthttp.GetterAsHandler(d.DescribeEnrichmentRule))
+		for _, rule := range d.DescribeEnrichmentRules() {
+			registeredEnrichmentRulesContributions[rule.Id] = rule
+			exthttp.RegisterHttpHandler(fmt.Sprintf("/discovery/enrichment-rules/%s", rule.Id), exthttp.GetterAsHandler(func() discovery_kit_api.TargetEnrichmentRule {
+				return rule
+			}))
+		}
 		return true
 	}
 	if w, ok := o.(Unwrapper); ok {
@@ -157,8 +160,8 @@ func getTargetAttributeReferences() []discovery_kit_api.DescribingEndpointRefere
 }
 
 func getTargetEnrichmentRuleReferences() []discovery_kit_api.DescribingEndpointReference {
-	result := make([]discovery_kit_api.DescribingEndpointReference, 0, len(registeredEnrichmentRulesContributor))
-	for id := range registeredEnrichmentRulesContributor {
+	result := make([]discovery_kit_api.DescribingEndpointReference, 0, len(registeredEnrichmentRulesContributions))
+	for id := range registeredEnrichmentRulesContributions {
 		result = append(result, discovery_kit_api.DescribingEndpointReference{
 			Method: discovery_kit_api.GET,
 			Path:   fmt.Sprintf("/discovery/enrichment-rules/%s", id),

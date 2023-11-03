@@ -125,9 +125,9 @@ func (e *MockEnrichmentDataDiscovery) DescribeAttributes() []discovery_kit_api.A
 	return args.Get(0).([]discovery_kit_api.AttributeDescription)
 }
 
-func (e *MockEnrichmentDataDiscovery) DescribeEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
+func (e *MockEnrichmentDataDiscovery) DescribeEnrichmentRules() []discovery_kit_api.TargetEnrichmentRule {
 	args := e.Called()
-	return args.Get(0).(discovery_kit_api.TargetEnrichmentRule)
+	return args.Get(0).([]discovery_kit_api.TargetEnrichmentRule)
 }
 
 func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
@@ -135,7 +135,7 @@ func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
 	m.On("Describe").Return(discovery_kit_api.DiscoveryDescription{
 		Id: "example-ed",
 	})
-	m.On("DescribeEnrichmentRule").Return(discovery_kit_api.TargetEnrichmentRule{
+	m.On("DescribeEnrichmentRules").Return([]discovery_kit_api.TargetEnrichmentRule{{
 		Src: discovery_kit_api.SourceOrDestination{
 			Selector: map[string]string{},
 			Type:     "example-ed",
@@ -147,7 +147,7 @@ func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
 		Id:         "enrichmentRule",
 		Version:    "ed",
 		Attributes: []discovery_kit_api.Attribute{},
-	})
+	}})
 	m.On("DescribeAttributes").Return([]discovery_kit_api.AttributeDescription{
 		{
 			Attribute: "example-ed.created",

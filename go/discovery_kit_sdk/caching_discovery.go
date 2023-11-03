@@ -34,7 +34,9 @@ type CachedDataEnrichmentDiscovery struct {
 
 var (
 	_ TargetDiscovery         = (*CachedTargetDiscovery)(nil)
+	_ Unwrapper               = (*CachedTargetDiscovery)(nil)
 	_ EnrichmentDataDiscovery = (*CachedDataEnrichmentDiscovery)(nil)
+	_ Unwrapper               = (*CachedDataEnrichmentDiscovery)(nil)
 )
 
 // NewCachedTargetDiscovery returns a caching target discovery.
