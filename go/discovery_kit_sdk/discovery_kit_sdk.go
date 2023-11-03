@@ -207,3 +207,10 @@ func checkForDuplicates(descriptions []discovery_kit_api.AttributeDescription) {
 		}
 	}
 }
+
+func ClearRegisteredDiscoveries() {
+	registeredDiscoveries = make(map[string]Discovery)
+	registeredTargetDescriber = make(map[string]TargetDescriber)
+	registeredAttributeDescriber = make([]AttributeDescriber, 0)
+	registeredEnrichmentRulesContributions = make(map[string]discovery_kit_api.TargetEnrichmentRule)
+}
