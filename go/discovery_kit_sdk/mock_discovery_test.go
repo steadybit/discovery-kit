@@ -44,12 +44,12 @@ func (e *MockDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return args.Get(0).(discovery_kit_api.DiscoveryDescription)
 }
 
-func (e *MockTargetDiscovery) DiscoverTargets(ctx context.Context) []discovery_kit_api.Target {
+func (e *MockTargetDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
 	args := e.Called(ctx)
 	e.cond.L.Lock()
 	defer e.cond.L.Unlock()
 	e.cond.Broadcast()
-	return args.Get(0).([]discovery_kit_api.Target)
+	return args.Get(0).([]discovery_kit_api.Target), args.Error(1)
 }
 
 func (e *MockTargetDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
@@ -97,7 +97,7 @@ func newMockTargetDiscovery() *MockTargetDiscovery {
 					"example.created": {m.Now().String()},
 				},
 			},
-		}}
+		}, nil}
 	}
 	return m
 }
@@ -112,12 +112,12 @@ var (
 	_ AttributeDescriber       = (*MockEnrichmentDataDiscovery)(nil)
 )
 
-func (e *MockEnrichmentDataDiscovery) DiscoverEnrichmentData(ctx context.Context) []discovery_kit_api.EnrichmentData {
+func (e *MockEnrichmentDataDiscovery) DiscoverEnrichmentData(ctx context.Context) ([]discovery_kit_api.EnrichmentData, error) {
 	args := e.Called(ctx)
 	e.cond.L.Lock()
 	defer e.cond.L.Unlock()
 	e.cond.Broadcast()
-	return args.Get(0).([]discovery_kit_api.EnrichmentData)
+	return args.Get(0).([]discovery_kit_api.EnrichmentData), args.Error(1)
 }
 
 func (e *MockEnrichmentDataDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
@@ -167,7 +167,7 @@ func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
 					"example-ed.created": {m.Now().String()},
 				},
 			},
-		}}
+		}, nil}
 	}
 
 	return m

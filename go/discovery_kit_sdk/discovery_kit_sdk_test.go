@@ -28,7 +28,7 @@ type TestCase struct {
 type TestContext struct {
 	targetDiscovery         *MockTargetDiscovery
 	enrichmentDataDiscovery *MockEnrichmentDataDiscovery
-	cachedDiscovery         *CachingTargetDiscovery
+	cachedDiscovery         *CachedTargetDiscovery
 	refreshTrigger          chan struct{}
 	api                     client.DiscoveryAPI
 	r                       *resty.Client
@@ -67,7 +67,7 @@ func Test_discoveryHttpAdapter(t *testing.T) {
 	}
 
 	trigger := make(chan struct{})
-	cachedDiscovery := CachedTargetDiscovery(targetDiscovery,
+	cachedDiscovery := NewCachedTargetDiscovery(targetDiscovery,
 		WithRefreshTargetsNow(),
 		WithRefreshTargetsTrigger(context.Background(), trigger),
 	)
@@ -166,8 +166,8 @@ func testEDDiscovery(t *testing.T, tc *TestContext) {
 func Test_unwrap(t *testing.T) {
 	clearDefaultServeMux()
 
-	Register(CachedTargetDiscovery(newMockTargetDiscovery()))
-	Register(CachedEnrichmentDataDiscovery(newMockEnrichmentDataDiscovery()))
+	Register(NewCachedTargetDiscovery(newMockTargetDiscovery()))
+	Register(NewCachedEnrichmentDataDiscovery(newMockEnrichmentDataDiscovery()))
 
 	discoveries := GetDiscoveryList()
 

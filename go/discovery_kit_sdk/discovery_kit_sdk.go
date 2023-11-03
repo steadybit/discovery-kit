@@ -27,13 +27,13 @@ type Discovery interface {
 type TargetDiscovery interface {
 	Discovery
 	// DiscoverTargets returns a list of targets.
-	DiscoverTargets(ctx context.Context) []discovery_kit_api.Target
+	DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error)
 }
 
 type EnrichmentDataDiscovery interface {
 	Discovery
 	// DiscoverEnrichmentData returns a list of enrichment data.
-	DiscoverEnrichmentData(ctx context.Context) []discovery_kit_api.EnrichmentData
+	DiscoverEnrichmentData(ctx context.Context) ([]discovery_kit_api.EnrichmentData, error)
 }
 
 type TargetDescriber interface {

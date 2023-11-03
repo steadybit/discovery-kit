@@ -4,8 +4,10 @@
 package discovery_kit_sdk
 
 import (
+	"errors"
 	"fmt"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
@@ -67,11 +69,24 @@ func (a discoveryHttpAdapter) handleGetDescription(w http.ResponseWriter, _ *htt
 
 func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Request, _ []byte) {
 	body := discovery_kit_api.DiscoveryData{}
+	var allErrs error
 	if t, ok := a.discovery.(TargetDiscovery); ok {
-		body.Targets = extutil.Ptr(t.DiscoverTargets(r.Context()))
+		targets, err := t.DiscoverTargets(r.Context())
+		if err != nil {
+			allErrs = errors.Join(allErrs, err)
+		}
+		body.Targets = extutil.Ptr(targets)
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
-		body.EnrichmentData = extutil.Ptr(e.DiscoverEnrichmentData(r.Context()))
+		data, err := e.DiscoverEnrichmentData(r.Context())
+		if err != nil {
+			allErrs = errors.Join(allErrs, err)
+		}
+		body.EnrichmentData = extutil.Ptr(data)
+	}
+	if allErrs != nil {
+		exthttp.WriteError(w, extension_kit.ToError("Discovery Failed", allErrs))
+		return
 	}
 	exthttp.WriteBody(w, body)
 }
