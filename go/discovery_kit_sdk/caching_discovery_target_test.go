@@ -34,7 +34,7 @@ func Test_target_caching_error(t *testing.T) {
 
 	discovery := newMockTargetDiscovery()
 	ch := make(chan struct{})
-	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch))
+	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch, 0))
 
 	discovery.On("DiscoverTargets", mock.Anything).Unset()
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{}}, nil).Once()
@@ -118,7 +118,7 @@ func Test_target_cache_trigger(t *testing.T) {
 
 	discovery := newMockTargetDiscovery()
 	ch := make(chan struct{})
-	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch))
+	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch, 0))
 
 	//should cache
 	discovery.WaitForNextDiscovery(func() {
@@ -142,6 +142,28 @@ func Test_target_cache_trigger(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	second, _ = cached.DiscoverTargets(ctx)
 	assert.Equal(t, first, second)
+}
+
+func Test_target_cache_trigger_debounced(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	discovery := newMockTargetDiscovery()
+	ch := make(chan struct{})
+	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch, 500*time.Millisecond))
+
+	//should refresh cache
+	first, _ := cached.DiscoverTargets(ctx)
+	ch <- struct{}{}
+	ch <- struct{}{}
+	ch <- struct{}{}
+	ch <- struct{}{}
+	discovery.WaitForNextDiscovery(func() {
+		ch <- struct{}{}
+	})
+	second, _ := cached.DiscoverTargets(ctx)
+	assert.NotEqual(t, first, second)
+	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 1)
 }
 
 func Test_target_cache_update(t *testing.T) {

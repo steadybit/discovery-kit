@@ -5,6 +5,7 @@ package discovery_kit_sdk
 
 import (
 	"context"
+	"github.com/bep/debounce"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"runtime/debug"
@@ -105,9 +106,9 @@ func (c *CachedDiscovery[T]) Unwrap() interface{} {
 	return c.Discovery
 }
 
-type mapper[U any] func(U) (U, error)
+type UpdateFn[U any] func(U) (U, error)
 
-func (c *CachedDiscovery[T]) update(fn mapper[[]T]) {
+func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastModified = time.Now()
@@ -116,8 +117,8 @@ func (c *CachedDiscovery[T]) update(fn mapper[[]T]) {
 	c.err = err
 }
 
-func (c *CachedDiscovery[T]) refresh(ctx context.Context) {
-	c.update(func(_ []T) ([]T, error) {
+func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
+	c.Update(func(_ []T) ([]T, error) {
 		return c.supplier(ctx)
 	})
 }
@@ -136,31 +137,39 @@ func WithRefreshEnrichmentDataNow() CachedDiscoveryOpt[discovery_kit_api.Enrichm
 func WithRefreshNow[T any]() CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
 		go func() {
-			m.refresh(context.Background())
+			m.Refresh(context.Background())
 		}()
 	}
 }
 
 // WithRefreshTargetsTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshTargetsTrigger(ctx context.Context, ch <-chan struct{}) CachedDiscoveryOpt[discovery_kit_api.Target] {
-	return WithRefreshTrigger[discovery_kit_api.Target](ctx, ch)
+func WithRefreshTargetsTrigger(ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithRefreshTrigger[discovery_kit_api.Target](ctx, ch, debounceFor)
 }
 
 // WithRefreshEnrichmentDataTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshEnrichmentDataTrigger(ctx context.Context, ch <-chan struct{}) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
-	return WithRefreshTrigger[discovery_kit_api.EnrichmentData](ctx, ch)
+func WithRefreshEnrichmentDataTrigger(ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithRefreshTrigger[discovery_kit_api.EnrichmentData](ctx, ch, debounceFor)
 }
 
+var noDebounce = func(f func()) { f() }
+
 // WithRefreshTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}) CachedDiscoveryOpt[T] {
+func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
+		debounceFn := noDebounce
+		if debounceFor > 0 {
+			debounceFn = debounce.New(debounceFor)
+		}
 		go func() {
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case <-ch:
-					m.refresh(ctx)
+					debounceFn(func() {
+						m.Refresh(ctx)
+					})
 				}
 			}
 		}()
@@ -186,7 +195,7 @@ func WithRefreshInterval[T any](ctx context.Context, interval time.Duration) Cac
 				case <-ctx.Done():
 					return
 				case <-time.After(interval):
-					m.refresh(ctx)
+					m.Refresh(ctx)
 				}
 			}
 		}()
@@ -213,7 +222,7 @@ func WithUpdate[T, U any](ctx context.Context, ch <-chan U, fn UpdateFunc[[]T, U
 				case <-ctx.Done():
 					return
 				case update := <-ch:
-					m.update(func(data []T) ([]T, error) {
+					m.Update(func(data []T) ([]T, error) {
 						return fn(data, update)
 					})
 				}

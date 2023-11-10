@@ -69,7 +69,7 @@ func Test_discoveryHttpAdapter(t *testing.T) {
 	trigger := make(chan struct{})
 	cachedDiscovery := NewCachedTargetDiscovery(targetDiscovery,
 		WithRefreshTargetsNow(),
-		WithRefreshTargetsTrigger(context.Background(), trigger),
+		WithRefreshTargetsTrigger(context.Background(), trigger, 0),
 	)
 
 	serverPort, err := freeport.GetFreePort()

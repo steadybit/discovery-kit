@@ -34,7 +34,7 @@ func Test_enrichmentData_caching_error(t *testing.T) {
 
 	discovery := newMockEnrichmentDataDiscovery()
 	ch := make(chan struct{})
-	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch))
+	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch, 0))
 
 	discovery.On("DiscoverEnrichmentData", mock.Anything).Unset()
 	discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{{}}, nil).Once()
@@ -117,7 +117,7 @@ func Test_enrichmentData_cache_trigger(t *testing.T) {
 
 	discovery := newMockEnrichmentDataDiscovery()
 	ch := make(chan struct{})
-	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch))
+	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch, 0))
 
 	//should cache
 	discovery.WaitForNextDiscovery(func() {
@@ -141,6 +141,28 @@ func Test_enrichmentData_cache_trigger(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	second, _ = cached.DiscoverEnrichmentData(ctx)
 	assert.Equal(t, first, second)
+}
+
+func Test_enrichmentData_cache_trigger_debounced(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	discovery := newMockEnrichmentDataDiscovery()
+	ch := make(chan struct{})
+	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch, 500*time.Millisecond))
+
+	//should refresh cache
+	first, _ := cached.DiscoverEnrichmentData(ctx)
+	ch <- struct{}{}
+	ch <- struct{}{}
+	ch <- struct{}{}
+	ch <- struct{}{}
+	discovery.WaitForNextDiscovery(func() {
+		ch <- struct{}{}
+	})
+	second, _ := cached.DiscoverEnrichmentData(ctx)
+	assert.NotEqual(t, first, second)
+	discovery.AssertNumberOfCalls(t, "DiscoverEnrichmentData", 1)
 }
 
 func Test_enrichmentData_cache_update(t *testing.T) {
