@@ -1,6 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
-go 1.20
+go 1.21
 
 require (
 	github.com/bep/debounce v1.2.1
