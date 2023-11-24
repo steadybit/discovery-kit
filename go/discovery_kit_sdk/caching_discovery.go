@@ -5,9 +5,9 @@ package discovery_kit_sdk
 
 import (
 	"context"
-	"github.com/bep/debounce"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/zmwangx/debounce"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -143,33 +143,37 @@ func WithRefreshNow[T any]() CachedDiscoveryOpt[T] {
 }
 
 // WithRefreshTargetsTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshTargetsTrigger(ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
-	return WithRefreshTrigger[discovery_kit_api.Target](ctx, ch, debounceFor)
+func WithRefreshTargetsTrigger(ctx context.Context, ch <-chan struct{}, throttlePeriod time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithRefreshTrigger[discovery_kit_api.Target](ctx, ch, throttlePeriod)
 }
 
 // WithRefreshEnrichmentDataTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshEnrichmentDataTrigger(ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
-	return WithRefreshTrigger[discovery_kit_api.EnrichmentData](ctx, ch, debounceFor)
+func WithRefreshEnrichmentDataTrigger(ctx context.Context, ch <-chan struct{}, throttlePeriod time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithRefreshTrigger[discovery_kit_api.EnrichmentData](ctx, ch, throttlePeriod)
 }
 
-var noDebounce = func(f func()) { f() }
-
 // WithRefreshTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
-func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, debounceFor time.Duration) CachedDiscoveryOpt[T] {
+func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, throttlePeriod time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		debounceFn := noDebounce
-		if debounceFor > 0 {
-			debounceFn = debounce.New(debounceFor)
+		fn := m.Refresh
+
+		if throttlePeriod > 0 {
+			debounced, _ := debounce.ThrottleWithCustomSignature(func(args ...interface{}) interface{} {
+				m.Refresh(args[0].(context.Context))
+				return nil
+			}, throttlePeriod)
+			fn = func(ctx context.Context) {
+				debounced(ctx)
+			}
 		}
+
 		go func() {
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case <-ch:
-					debounceFn(func() {
-						m.Refresh(ctx)
-					})
+					fn(ctx)
 				}
 			}
 		}()

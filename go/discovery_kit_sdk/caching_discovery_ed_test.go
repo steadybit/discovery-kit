@@ -162,7 +162,7 @@ func Test_enrichmentData_cache_trigger_debounced(t *testing.T) {
 	})
 	second, _ := cached.DiscoverEnrichmentData(ctx)
 	assert.NotEqual(t, first, second)
-	discovery.AssertNumberOfCalls(t, "DiscoverEnrichmentData", 1)
+	discovery.AssertNumberOfCalls(t, "DiscoverEnrichmentData", 2)
 }
 
 func Test_enrichmentData_cache_update(t *testing.T) {

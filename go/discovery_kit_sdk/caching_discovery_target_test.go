@@ -163,7 +163,7 @@ func Test_target_cache_trigger_debounced(t *testing.T) {
 	})
 	second, _ := cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, first, second)
-	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 1)
+	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 2)
 }
 
 func Test_target_cache_update(t *testing.T) {
