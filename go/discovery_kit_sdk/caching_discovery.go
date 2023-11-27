@@ -61,7 +61,6 @@ func (c *CachedTargetDiscovery) DiscoverTargets(_ context.Context) ([]discovery_
 
 // NewCachedEnrichmentDataDiscovery returns a caching enrichment data discovery.
 func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedDiscoveryOpt[discovery_kit_api.EnrichmentData]) *CachedDataEnrichmentDiscovery {
-
 	c := &CachedDataEnrichmentDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.EnrichmentData]{
 			Discovery: d,
@@ -112,9 +111,11 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastModified = time.Now()
+	log.Trace().Msg("updating discovery data")
 	data, err := fn(c.data)
 	c.data = data
 	c.err = err
+	log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Err(err).Msg("discovery data updated")
 }
 
 func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
