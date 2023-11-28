@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- fix target enrichment rule http adapter
+
 ## 1.0.1
 
 - add debug logging when refreshing discovery data
