@@ -144,7 +144,19 @@ func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
 			Selector: map[string]string{},
 			Type:     "other",
 		},
-		Id:         "enrichmentRule",
+		Id:         "enrichmentRule-1",
+		Version:    "ed",
+		Attributes: []discovery_kit_api.Attribute{},
+	}, {
+		Src: discovery_kit_api.SourceOrDestination{
+			Selector: map[string]string{},
+			Type:     "example-ed",
+		},
+		Dest: discovery_kit_api.SourceOrDestination{
+			Selector: map[string]string{},
+			Type:     "other",
+		},
+		Id:         "enrichmentRule-2",
 		Version:    "ed",
 		Attributes: []discovery_kit_api.Attribute{},
 	}})

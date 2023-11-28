@@ -114,9 +114,10 @@ func registerAttributeDescriber(o interface{}) bool {
 func registerEnrichmentRuleContributor(o interface{}) bool {
 	if d, ok := o.(EnrichmentRulesDescriber); ok {
 		for _, rule := range d.DescribeEnrichmentRules() {
+			ruleCopy := rule // copy the value, otherwise the closure will always point to the last value of the slice
 			registeredEnrichmentRulesContributions[rule.Id] = rule
 			exthttp.RegisterHttpHandler(fmt.Sprintf("/discovery/enrichment-rules/%s", rule.Id), exthttp.GetterAsHandler(func() discovery_kit_api.TargetEnrichmentRule {
-				return rule
+				return ruleCopy
 			}))
 		}
 		return true

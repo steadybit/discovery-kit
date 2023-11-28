@@ -35,6 +35,7 @@ type TestContext struct {
 }
 
 func Test_discoveryHttpAdapter(t *testing.T) {
+	extlogging.InitZeroLog()
 	clearDefaultServeMux()
 
 	testCases := []TestCase{
@@ -49,6 +50,10 @@ func Test_discoveryHttpAdapter(t *testing.T) {
 		{
 			Name: "test enrichment data discovery",
 			Fn:   testEDDiscovery,
+		},
+		{
+			Name: "test enrichment rules",
+			Fn:   testEDEnrichmentRules,
 		},
 		{
 			Name: "test cached target discovery",
@@ -76,7 +81,6 @@ func Test_discoveryHttpAdapter(t *testing.T) {
 	require.NoError(t, err)
 
 	go func() {
-		extlogging.InitZeroLog()
 		Register(edDiscovery)
 		Register(cachedDiscovery)
 
@@ -163,6 +167,22 @@ func testEDDiscovery(t *testing.T, tc *TestContext) {
 	})
 }
 
+func testEDEnrichmentRules(t *testing.T, tc *TestContext) {
+	list, err := tc.api.ListDiscoveries()
+	require.NoError(t, err)
+	assert.Len(t, list.TargetEnrichmentRules, 2)
+
+	ruleIds := make([]string, 0, len(list.TargetEnrichmentRules))
+	for _, ruleRef := range list.TargetEnrichmentRules {
+		rule, err := tc.api.DescribeEnrichmentRule(ruleRef)
+		require.NoError(t, err)
+		ruleIds = append(ruleIds, rule.Id)
+	}
+
+	assert.Contains(t, ruleIds, "enrichmentRule-1")
+	assert.Contains(t, ruleIds, "enrichmentRule-2")
+}
+
 func Test_unwrap(t *testing.T) {
 	clearDefaultServeMux()
 
@@ -174,7 +194,7 @@ func Test_unwrap(t *testing.T) {
 	assert.Len(t, discoveries.Discoveries, 2)
 	assert.Len(t, discoveries.TargetAttributes, 1)
 	assert.Len(t, discoveries.TargetTypes, 1)
-	assert.Len(t, discoveries.TargetEnrichmentRules, 1)
+	assert.Len(t, discoveries.TargetEnrichmentRules, 2)
 }
 
 func clearDefaultServeMux() {
