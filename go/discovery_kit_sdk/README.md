@@ -18,7 +18,7 @@ go get github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
 ## Usage
 
-1. Implement at least the `discovery_kit_sdk.TargetDiscovery` or `discovery_kit_sdk.EnrichmentDataDisocver` interface
+1. Implement at least the `discovery_kit_sdk.TargetDiscovery` or `discovery_kit_sdk.EnrichmentDataDisocvery` interface
 
 2. Implement other interfaces if you need them:
     - `discovery_kit_sdk.TargetDescriber`
@@ -34,3 +34,21 @@ go get github.com/steadybit/discovery-kit/go/discovery_kit_sdk
    ```go
    exthttp.RegisterHttpHandler("/discoveries", exthttp.GetterAsHandler(discovery_kit_sdk.GetDiscoveryList))
    ```
+
+## Caching / Async Discovery
+
+If you implement the `TargetDiscovery` / `EnrichmentDataDiscovery` in a straigh-forward fashion, then the discovery is executed synchronously for each HTTP request.
+You can decouple this by decorating your disocvery using the `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery` functions, you pass your discovery as well as options to control the refreshing of the data.
+
+´´´go
+	discovery := &jvmDiscovery{}
+	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
+		discovery_kit_sdk.WithRefreshTargetsNow(),
+		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 30*time.Second),
+	)
+```
+
+You have various options to refresh periodically, once, on trigger. Also it will recovery from any panic in the discovery.
+
+
+
