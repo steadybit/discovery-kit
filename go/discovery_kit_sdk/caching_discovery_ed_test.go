@@ -29,6 +29,33 @@ func Test_enrichmentData_caching(t *testing.T) {
 	discovery.AssertNumberOfCalls(t, "DiscoverEnrichmentData", 1)
 }
 
+func Test_enrichmentData_timeout(t *testing.T) {
+	ctx := context.Background()
+
+	discovery := newMockEnrichmentDataDiscovery()
+	cached := NewCachedEnrichmentDataDiscovery(discovery, WithEnrichmentDataRefreshTimeout(1*time.Second))
+
+	discovery.On("DiscoverEnrichmentData", mock.Anything).Unset()
+	discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{{}}, nil).Once()
+	call := discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{}, nil).Once()
+	call.RunFn = func(args mock.Arguments) {
+		time.Sleep(5 * time.Second)
+	}
+	discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{{}}, nil).Once()
+
+	cached.Refresh(ctx)
+	first, _ := cached.DiscoverEnrichmentData(ctx)
+	assert.Len(t, first, 1)
+
+	cached.Refresh(ctx)
+	_, secondErr := cached.DiscoverEnrichmentData(ctx)
+	assert.ErrorIs(t, secondErr, ErrDiscoveryTimeout)
+
+	cached.Refresh(ctx)
+	third, _ := cached.DiscoverEnrichmentData(ctx)
+	assert.Len(t, third, 1)
+}
+
 func Test_enrichmentData_caching_error(t *testing.T) {
 	ctx := context.Background()
 
@@ -143,7 +170,7 @@ func Test_enrichmentData_cache_trigger(t *testing.T) {
 	assert.Equal(t, first, second)
 }
 
-func Test_enrichmentData_cache_trigger_debounced(t *testing.T) {
+func Test_enrichmentData_cache_trigger_throttle(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

@@ -5,6 +5,7 @@ package discovery_kit_sdk
 
 import (
 	"context"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/zmwangx/debounce"
@@ -33,6 +34,9 @@ type CachedDataEnrichmentDiscovery struct {
 	CachedDiscovery[discovery_kit_api.EnrichmentData]
 }
 
+var (
+	ErrDiscoveryTimeout = errors.New("discovery timed out")
+)
 var (
 	_ TargetDiscovery         = (*CachedTargetDiscovery)(nil)
 	_ Unwrapper               = (*CachedTargetDiscovery)(nil)
@@ -111,11 +115,15 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastModified = time.Now()
-	log.Trace().Msg("updating discovery data")
+	log.Trace().Msg("updating discovery")
 	data, err := fn(c.data)
 	c.data = data
 	c.err = err
-	log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Err(err).Msg("discovery data updated")
+	if err == nil {
+		log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
+	} else {
+		log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
+	}
 }
 
 func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
@@ -233,5 +241,44 @@ func WithUpdate[T, U any](ctx context.Context, ch <-chan U, fn UpdateFunc[[]T, U
 				}
 			}
 		}()
+	}
+}
+
+type result[T any] struct {
+	data []T
+	err  error
+}
+
+// WithTargetsRefreshTimeout decorates the supplier with a timeout.
+func WithTargetsRefreshTimeout(timeout time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithRefreshTimeout[discovery_kit_api.Target](timeout)
+}
+
+// WithEnrichmentDataRefreshTimeout decorates the supplier with a timeout.
+func WithEnrichmentDataRefreshTimeout(timeout time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithRefreshTimeout[discovery_kit_api.EnrichmentData](timeout)
+}
+
+func WithRefreshTimeout[T any](timeout time.Duration) CachedDiscoveryOpt[T] {
+	return func(m *CachedDiscovery[T]) {
+		supplier := m.supplier
+
+		m.supplier = func(ctx context.Context) ([]T, error) {
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
+			ch := make(chan result[T], 1)
+			go func() {
+				data, err := supplier(ctx)
+				ch <- result[T]{data: data, err: err}
+			}()
+
+			select {
+			case <-ctx.Done():
+				return nil, ErrDiscoveryTimeout
+			case r := <-ch:
+				return r.data, r.err
+			}
+		}
 	}
 }

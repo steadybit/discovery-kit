@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3-next
+
+- add WithRefreshTimeout option for cached discovery
+
 ## 1.0.2
 
 - fix target enrichment rule http adapter

@@ -29,6 +29,33 @@ func Test_target_caching(t *testing.T) {
 	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 1)
 }
 
+func Test_target_timeout(t *testing.T) {
+	ctx := context.Background()
+
+	discovery := newMockTargetDiscovery()
+	cached := NewCachedTargetDiscovery(discovery, WithTargetsRefreshTimeout(1*time.Second))
+
+	discovery.On("DiscoverTargets", mock.Anything).Unset()
+	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{}}, nil).Once()
+	call := discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{}, nil).Once()
+	call.RunFn = func(args mock.Arguments) {
+		time.Sleep(2 * time.Second)
+	}
+	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{}}, nil).Once()
+
+	cached.Refresh(ctx)
+	first, _ := cached.DiscoverTargets(ctx)
+	assert.Len(t, first, 1)
+
+	cached.Refresh(ctx)
+	_, secondErr := cached.DiscoverTargets(ctx)
+	assert.ErrorIs(t, secondErr, ErrDiscoveryTimeout)
+
+	cached.Refresh(ctx)
+	third, _ := cached.DiscoverTargets(ctx)
+	assert.Len(t, third, 1)
+}
+
 func Test_target_caching_error(t *testing.T) {
 	ctx := context.Background()
 
@@ -144,7 +171,7 @@ func Test_target_cache_trigger(t *testing.T) {
 	assert.Equal(t, first, second)
 }
 
-func Test_target_cache_trigger_debounced(t *testing.T) {
+func Test_target_cache_trigger_throttle(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
