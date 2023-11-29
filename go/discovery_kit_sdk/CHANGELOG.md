@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.3-next
+## 1.0.3
 
 - add WithRefreshTimeout option for cached discovery
 
