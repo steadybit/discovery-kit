@@ -1,12 +1,12 @@
 # DsicoveryKit Go SDK
 
-This module contains helper and interfaces which will help you to implement discoveries using
+This module contains helpers and interfaces which will help you to implement discoveries using
 the [discovery_kit go api](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api).
 
-The module encapsulates the following technical aspects and provides helpers for following aspects:
+The module encapsulates the following technical aspects and provides helpers for the following elements:
 
-- The sdk will wrap around your `describe` call and will provide some meaningful defaults for your endpoint definitions.
-- Caching and async discovery execution to decouple the discovery execution from the http requests. 
+- The SDK will wrap around your `describe` call and provide meaningful defaults for your endpoint definitions.
+- Caching and async discovery execution to decouple the discovery execution from the HTTP requests. 
 
 ## Installation
 
@@ -37,10 +37,10 @@ go get github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
 ## Caching / Async Discovery
 
-If you implement the `TargetDiscovery` / `EnrichmentDataDiscovery` in a straigh-forward fashion, then the discovery is executed synchronously for each HTTP request.
-You can decouple this by decorating your disocvery using the `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery` functions, you pass your discovery as well as options to control the refreshing of the data.
+If you implement the `TargetDiscovery` / `EnrichmentDataDiscovery` in a straightforward fashion, then the discovery is executed synchronously for each HTTP request.
+You can decouple this by decorating your discovery using the `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery` functions. You pass your discovery and options to control the refreshing of the data.
 
-´´´go
+```go
 	discovery := &jvmDiscovery{}
 	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
 		discovery_kit_sdk.WithRefreshTargetsNow(),
@@ -48,7 +48,7 @@ You can decouple this by decorating your disocvery using the `NewCachedTargetDis
 	)
 ```
 
-You have various options to refresh periodically, once, on trigger. Also it will recovery from any panic in the discovery.
+You have various options to refresh periodically once on the trigger. Also, it will help recover from any panic upon discovery.
 
 
 
