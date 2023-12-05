@@ -151,12 +151,12 @@ func WithRefreshNow[T any]() CachedDiscoveryOpt[T] {
 	}
 }
 
-// WithRefreshTargetsTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
+// WithRefreshTargetsTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled. The refreshes will be throttled by the given throttlePeriod.
 func WithRefreshTargetsTrigger(ctx context.Context, ch <-chan struct{}, throttlePeriod time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
 	return WithRefreshTrigger[discovery_kit_api.Target](ctx, ch, throttlePeriod)
 }
 
-// WithRefreshEnrichmentDataTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled.
+// WithRefreshEnrichmentDataTrigger triggers a refresh of the cache when an item on the channel is received and will stop when the context is canceled. The refreshes will be throttled by the given throttlePeriod.
 func WithRefreshEnrichmentDataTrigger(ctx context.Context, ch <-chan struct{}, throttlePeriod time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
 	return WithRefreshTrigger[discovery_kit_api.EnrichmentData](ctx, ch, throttlePeriod)
 }
