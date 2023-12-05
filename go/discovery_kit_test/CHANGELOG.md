@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Only join errors if there are any
+
 ## 1.1.0
 
 - Update to discovery_kit_api 1.5.0
