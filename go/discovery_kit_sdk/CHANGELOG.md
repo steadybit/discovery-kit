@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- update to discovery_kit_test 1.1.2
+
 ## 1.0.3
 
 - add WithRefreshTimeout option for cached discovery
