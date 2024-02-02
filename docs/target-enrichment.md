@@ -72,4 +72,4 @@ Note that `$.enrichmentRules[*].src.type` and `$.enrichmentRules[*].dest.type` d
 
 ### I have changed target enrichment rules, but nothing happens in Steadybit?
 
-When in doubt, ensure that the targets are re-reported. You can either restart the agents or through the *re-trigger target discovery* button in Steadybit's UI (under Setting -> Agents).
+When in doubt, ensure that the targets are re-reported. You can restart the agents.
