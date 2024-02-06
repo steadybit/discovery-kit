@@ -48,8 +48,7 @@ func TestDiscoveryDescription(t *testing.T) {
 			Path:         "/",
 			CallInterval: Ptr("5m"),
 		},
-		Id:         "42",
-		RestrictTo: Ptr(LEADER),
+		Id: "42",
 	}
 	markAsUsed(t, v)
 }
