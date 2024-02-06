@@ -53,7 +53,10 @@ components:
           $ref: '#/components/schemas/DescribingEndpointReferenceWithCallInterval'
         restrictTo:
           type: string
-          description: "If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent."
+          deprecated: true
+          description: >-
+            Deprecated: has not effect anymore.
+            If the agent is deployed as a daemonset in Kubernetes, should the discovery only be called from the leader agent? This can be helpful to avoid duplicate targets for every running agent.
           enum:
             - ANY
             - LEADER
