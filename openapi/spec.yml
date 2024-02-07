@@ -274,6 +274,7 @@ components:
             - equals
             - contains
             - starts_with
+            - regex
       required:
         - name
         - matcher
