@@ -68,6 +68,12 @@ This concept is similar to [Kubernetes label selectors](https://kubernetes.io/do
 
 Note that `$.enrichmentRules[*].src.type` and `$.enrichmentRules[*].dest.type` do not have to match `$.id`. This means that you could even implement multiple-consecutive copy operations.
 
+### TargetEnrichmentRule Matcher
+- EQUALS: The source attribute name must be equal to the attribute name provided.
+- REGEX: The source attribute name must match the regular expression provided. You must use Postgres jsonb [regex syntax](https://www.postgresql.org/docs/current/functions-matching.html#POSIX-SYNTAX-DETAILS).
+- CONTAINS: The source attribute name must contain the attribute name provided.
+- STARTS_WITH: The source attribute name must start with the attribute name provided.
+
 ## FAQ
 
 ### I have changed target enrichment rules, but nothing happens in Steadybit?

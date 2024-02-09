@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.5.2
-- add TargetEnrichmentRule Matcher Regex
+- add TargetEnrichmentRule Matcher Regex (available in platform version >= 2.0.0 and agent version >= 2.0.2)
 
 ## 1.5.1
 - Deprecate: DiscoveryDescription.restrictTo. Not needed anymore.
