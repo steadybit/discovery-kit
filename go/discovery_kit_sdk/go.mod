@@ -6,7 +6,7 @@ require (
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/rs/zerolog v1.32.0
-	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.1
+	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.1.2
 	github.com/steadybit/extension-kit v1.8.11
 	github.com/stretchr/testify v1.8.4
