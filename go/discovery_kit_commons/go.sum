@@ -37,8 +37,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad/go.mod h1:qLr4V1qq6nMqFKkMo8ZTx3f+BZEkzsRUY10Xsm2mwU0=
-github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.1 h1:qUj/SFghf/+uMM7eq+JspMVMghPgSTHqfnzyBlsNYSU=
-github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.1/go.mod h1:z/470RzpfjTaD0rpJkj0b0r2DZH9StY3SRkETMKt43E=
+github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2 h1:xWhV5djzK/M+vEF0hZ23Am1Kv6CLIAYgaKzDKk/4eH8=
+github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2/go.mod h1:z/470RzpfjTaD0rpJkj0b0r2DZH9StY3SRkETMKt43E=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
