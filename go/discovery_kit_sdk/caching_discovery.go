@@ -112,13 +112,12 @@ func (c *CachedDiscovery[T]) Unwrap() interface{} {
 type UpdateFn[U any] func(U) (U, error)
 
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
-	c.mu.Lock()
-	c.lastModified = time.Now()
-	c.mu.Unlock()
+	lastModified := time.Now()
 	log.Trace().Msg("updating discovery")
 	data, err := fn(c.data)
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.lastModified = lastModified
 	c.data = data
 	c.err = err
 	if err == nil {
