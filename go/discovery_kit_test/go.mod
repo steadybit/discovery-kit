@@ -7,7 +7,7 @@ require (
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/text v0.14.0
 )
 
