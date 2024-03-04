@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5
+
+- fix: caching discovery usage of write lock
+- update dependencies
+
 ## 1.0.4
 
 - update to discovery_kit_test 1.1.2
