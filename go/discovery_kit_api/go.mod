@@ -3,7 +3,7 @@ module github.com/steadybit/discovery-kit/go/discovery_kit_api
 go 1.21
 
 require (
-	github.com/getkin/kin-openapi v0.123.0
+	github.com/getkin/kin-openapi v0.124.0
 	github.com/oapi-codegen/runtime v1.1.1
 )
 
