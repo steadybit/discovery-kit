@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.7
+
+- additional logging for extension errors during discovery updates
+
 ## 1.0.6
 
 - code cleanup
