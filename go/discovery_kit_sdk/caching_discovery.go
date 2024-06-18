@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/zmwangx/debounce"
 	"runtime/debug"
 	"sync"
@@ -123,7 +124,20 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	if err == nil {
 		log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
 	} else {
-		log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
+		var extensionError extension_kit.ExtensionError
+		isExtensionError := errors.As(err, &extensionError)
+		if isExtensionError {
+			logEvent := log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Str("title", extensionError.Title)
+			if extensionError.Detail != nil {
+				logEvent = logEvent.Str("detail", *extensionError.Detail)
+			}
+			if extensionError.Instance != nil {
+				logEvent = logEvent.Str("instance", *extensionError.Instance)
+			}
+			logEvent.Msg("discovery update failed")
+		} else {
+			log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
+		}
 	}
 }
 
