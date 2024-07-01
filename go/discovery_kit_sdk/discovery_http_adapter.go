@@ -4,6 +4,7 @@
 package discovery_kit_sdk
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -70,15 +71,16 @@ func (a discoveryHttpAdapter) handleGetDescription(w http.ResponseWriter, _ *htt
 func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Request, _ []byte) {
 	body := discovery_kit_api.DiscoveryData{}
 	var allErrs error
+	newCtx := context.WithValue(r.Context(), "httpRequest", r)
 	if t, ok := a.discovery.(TargetDiscovery); ok {
-		targets, err := t.DiscoverTargets(r.Context())
+		targets, err := t.DiscoverTargets(newCtx)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
 		body.Targets = extutil.Ptr(targets)
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
-		data, err := e.DiscoverEnrichmentData(r.Context())
+		data, err := e.DiscoverEnrichmentData(newCtx)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
