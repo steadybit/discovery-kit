@@ -72,13 +72,6 @@ A discovery description is required for each discovery. The HTTP endpoint servin
 
 Discovery descriptions expose information about the endpoint, the call interval and an optional restriction where to run the discovery.
 
-### restrictTo
-
-Remember that the discoveries will be executed on all agents where the endpoints are configured. For example, if you apply the endpoint configuration to a Kubernetes daemonset, you may have multiple instances fetching the same target data. This could lead to duplicate targets in the platform (technically, each target's unique ID includes the agent ID). The `restrictTo`-attribute helps restrict the discovery execution to specific contexts. Currently, there are two supported values.
-
-- `ANY`, the default, will run the discovery on every agent
-- `LEADER`, will only call the discovery from a single Kubernetes pod in your cluster - the current leader.
-
 ### Example
 
 ```json
@@ -90,8 +83,7 @@ Remember that the discoveries will be executed on all agents where the endpoints
   "discover": {
     "path": "/discoveries/cats/discover",
     "callInterval": "10s"
-  },
-  "restrictTo": "LEADER"
+  }
 }
 ```
 
