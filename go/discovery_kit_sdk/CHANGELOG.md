@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+
+- Update to discovery_kit_api 1.6.0
+
 ## 1.0.7
 
 - additional logging for extension errors during discovery updates

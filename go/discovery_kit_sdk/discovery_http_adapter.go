@@ -16,7 +16,6 @@ import (
 
 const (
 	defaultCallInterval = "30s"
-	defaultRestrictTo   = discovery_kit_api.LEADER
 )
 
 func newDiscoveryHttpAdapter(discovery Discovery) *discoveryHttpAdapter {
@@ -39,9 +38,6 @@ func getDescriptionWithDefaults(discovery Discovery) discovery_kit_api.Discovery
 	}
 	if description.Discover.CallInterval == nil {
 		description.Discover.CallInterval = extutil.Ptr(defaultCallInterval)
-	}
-	if description.RestrictTo == nil {
-		description.RestrictTo = extutil.Ptr(defaultRestrictTo)
 	}
 	return description
 }
