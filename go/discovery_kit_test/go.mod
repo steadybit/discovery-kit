@@ -6,7 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.127.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/jarcoal/httpmock v1.3.1
-	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2
+	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.6.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/text v0.17.0
 )
@@ -16,7 +16,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
-	github.com/google/uuid v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/invopop/yaml v0.3.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
