@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	discovery_kit_api "github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
