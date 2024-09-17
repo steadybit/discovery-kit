@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0
+- Removed `RestrictedTo` from `DiscoveryDescription`
+
 ## 1.5.2
 - add TargetEnrichmentRule Matcher Regex (available in platform version >= 2.0.0 and agent version >= 2.0.2)
 

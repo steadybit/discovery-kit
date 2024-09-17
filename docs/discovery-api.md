@@ -10,16 +10,18 @@ Discoveries are implemented with the help of DiscoveryKit and the discovery API 
 
 As can be seen above, the discovery provider is called by the Steadybit agent in two phases:
 
-- In the discovery registration phase, Steadybit learns about the supported discoveries and its targets. Once this phase is completed, discoveries will be
+- Steadybit learns about the supported discoveries and their targets in the discovery **registration phase**. Once this phase is completed, discoveries will be
   scheduled within the agent.
-- The discovery will be called by the agent's scheduler in the execution phase.
+- The agent's scheduler will call the discovery in the **execution phase**.
 
-The following sections explain the various API endpoints, their responsibilities and structures in more detail.
+The following sections explain the API endpoints, their responsibilities, and structures in more detail.
 
 ## Index Response
 
-As the name implies, this is the root of a discovery provider and returns a list of supported discoveries, target type and target attribute descriptions. Or,
+As the name implies, this is the root of a discovery provider and returns a list of supported discoveries, target type, and target attribute descriptions. Or,
 more specifically, HTTP endpoints that the agent should call to learn more about them.
+
+All paths will be resolved relative to the URL used to register the extension at the agent. For example, if `https://extension/some-path` was used to register and this endpoint returns `/discoveries/cats,` the agent will make the request to `https://extension/some-path/discoveries/cats.` This allows extensions to run behind reverse proxies, rewriting the path. 
 
 This endpoint needs to be [registered with Steadybit agents](./discovery-registration.md).
 
@@ -70,13 +72,6 @@ A discovery description is required for each discovery. The HTTP endpoint servin
 
 Discovery descriptions expose information about the endpoint, the call interval and an optional restriction where to run the discovery.
 
-### restrictTo
-
-Remember that the discoveries will be executed on all agents where the endpoints are configured. For example, if you apply the endpoint configuration to a Kubernetes daemonset, you may have multiple instances fetching the same target data. This could lead to duplicate targets in the platform (technically, each target's unique ID includes the agent ID). The `restrictTo`-attribute helps restrict the discovery execution to specific contexts. Currently, there are two supported values.
-
-- `ANY`, the default, will run the discovery on every agent
-- `LEADER`, will only call the discovery from a single Kubernetes pod in your cluster - the current leader.
-
 ### Example
 
 ```json
@@ -88,8 +83,7 @@ Remember that the discoveries will be executed on all agents where the endpoints
   "discover": {
     "path": "/discoveries/cats/discover",
     "callInterval": "10s"
-  },
-  "restrictTo": "LEADER"
+  }
 }
 ```
 
