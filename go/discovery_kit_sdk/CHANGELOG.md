@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- add http request to context
+
 ## 1.1.0
 
 - Update to discovery_kit_api 1.6.0
