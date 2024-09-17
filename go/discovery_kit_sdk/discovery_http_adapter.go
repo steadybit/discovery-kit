@@ -4,9 +4,10 @@
 package discovery_kit_sdk
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	discovery_kit_api "github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
@@ -63,18 +64,22 @@ func (a discoveryHttpAdapter) handleGetDescription(w http.ResponseWriter, _ *htt
 	exthttp.WriteBody(w, a.description)
 }
 
+type HttpRequestContextKey string
+
 func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Request, _ []byte) {
 	body := discovery_kit_api.DiscoveryData{}
 	var allErrs error
+	var key HttpRequestContextKey = "httpRequest"
+	newCtx := context.WithValue(r.Context(), key, r)
 	if t, ok := a.discovery.(TargetDiscovery); ok {
-		targets, err := t.DiscoverTargets(r.Context())
+		targets, err := t.DiscoverTargets(newCtx)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
 		body.Targets = extutil.Ptr(targets)
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
-		data, err := e.DiscoverEnrichmentData(r.Context())
+		data, err := e.DiscoverEnrichmentData(newCtx)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
