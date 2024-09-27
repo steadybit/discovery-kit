@@ -7,15 +7,13 @@ import (
 	"context"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/extension-kit/extutil"
-	"sync"
 	"time"
 )
 import "github.com/stretchr/testify/mock"
 
 type MockDiscovery struct {
 	mock.Mock
-	Now  func() time.Time
-	cond *sync.Cond
+	Now func() time.Time
 }
 
 type MockTargetDiscovery struct {
@@ -28,17 +26,6 @@ var (
 	_ AttributeDescriber = (*MockTargetDiscovery)(nil)
 )
 
-func (e *MockDiscovery) WaitForNextDiscovery(fn ...func()) {
-	e.cond.L.Lock()
-	defer e.cond.L.Unlock()
-	go func() {
-		for _, f := range fn {
-			f()
-		}
-	}()
-	e.cond.Wait()
-}
-
 func (e *MockDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	args := e.Called()
 	return args.Get(0).(discovery_kit_api.DiscoveryDescription)
@@ -46,9 +33,6 @@ func (e *MockDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 
 func (e *MockTargetDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
 	args := e.Called(ctx)
-	e.cond.L.Lock()
-	defer e.cond.L.Unlock()
-	e.cond.Broadcast()
 	return args.Get(0).([]discovery_kit_api.Target), args.Error(1)
 }
 
@@ -63,7 +47,7 @@ func (e *MockTargetDiscovery) DescribeAttributes() []discovery_kit_api.Attribute
 }
 
 func newMockTargetDiscovery() *MockTargetDiscovery {
-	m := &MockTargetDiscovery{MockDiscovery{Now: time.Now, cond: sync.NewCond(&sync.Mutex{})}}
+	m := &MockTargetDiscovery{MockDiscovery{Now: time.Now}}
 	m.On("Describe").Return(discovery_kit_api.DiscoveryDescription{
 		Id: "example",
 	})
@@ -114,9 +98,6 @@ var (
 
 func (e *MockEnrichmentDataDiscovery) DiscoverEnrichmentData(ctx context.Context) ([]discovery_kit_api.EnrichmentData, error) {
 	args := e.Called(ctx)
-	e.cond.L.Lock()
-	defer e.cond.L.Unlock()
-	e.cond.Broadcast()
 	return args.Get(0).([]discovery_kit_api.EnrichmentData), args.Error(1)
 }
 
@@ -131,7 +112,7 @@ func (e *MockEnrichmentDataDiscovery) DescribeEnrichmentRules() []discovery_kit_
 }
 
 func newMockEnrichmentDataDiscovery() *MockEnrichmentDataDiscovery {
-	m := &MockEnrichmentDataDiscovery{MockDiscovery{Now: time.Now, cond: sync.NewCond(&sync.Mutex{})}}
+	m := &MockEnrichmentDataDiscovery{MockDiscovery{Now: time.Now}}
 	m.On("Describe").Return(discovery_kit_api.DiscoveryDescription{
 		Id: "example-ed",
 	})

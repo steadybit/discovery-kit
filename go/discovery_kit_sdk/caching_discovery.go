@@ -13,14 +13,17 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+	"unique"
 )
+
+type discoverFn[T any] func(ctx context.Context) ([]T, error)
 
 type CachedDiscovery[T any] struct {
 	Discovery
 
 	mu           sync.RWMutex
 	lastModified time.Time
-	supplier     func(ctx context.Context) ([]T, error)
+	supplier     discoverFn[T]
 	data         []T
 	err          error
 }
@@ -50,7 +53,7 @@ func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[disc
 	c := &CachedTargetDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.Target]{
 			Discovery: d,
-			supplier:  recoverable(d.DiscoverTargets),
+			supplier:  recoverable(internStrings(internTargetStrings, d.DiscoverTargets)),
 			data:      make([]discovery_kit_api.Target, 0),
 		},
 	}
@@ -69,7 +72,7 @@ func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedD
 	c := &CachedDataEnrichmentDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.EnrichmentData]{
 			Discovery: d,
-			supplier:  recoverable(d.DiscoverEnrichmentData),
+			supplier:  recoverable(internStrings(internEnrichmentDataItemStrings, d.DiscoverEnrichmentData)),
 			data:      make([]discovery_kit_api.EnrichmentData, 0),
 		},
 	}
@@ -83,8 +86,8 @@ func (c *CachedDataEnrichmentDiscovery) DiscoverEnrichmentData(_ context.Context
 	return c.CachedDiscovery.Get()
 }
 
-func recoverable[T any](fn func(ctx context.Context) (T, error)) func(ctx context.Context) (T, error) {
-	return func(ctx context.Context) (d T, e error) {
+func recoverable[T any](fn discoverFn[T]) discoverFn[T] {
+	return func(ctx context.Context) (d []T, e error) {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Error().Msgf("discovery panic: %v\n %s", err, string(debug.Stack()))
@@ -296,4 +299,62 @@ func WithRefreshTimeout[T any](timeout time.Duration) CachedDiscoveryOpt[T] {
 			}
 		}
 	}
+}
+
+type makeHandleFunc func(s string) string
+
+func internStrings[T any](fnInternItem func(makeHandleFunc, *T) error, fn discoverFn[T]) discoverFn[T] {
+	return func(ctx context.Context) ([]T, error) {
+		data, err := fn(ctx)
+		if err != nil || len(data) == 0 {
+			return data, err
+		}
+
+		//keep handles until all are process so gc won't remove them and break the deduplication
+		handles := make([]unique.Handle[string], len(data))
+		makeHandle := func(s string) string {
+			h := unique.Make(s)
+			handles = append(handles, h)
+			return h.Value()
+		}
+
+		for i := range data {
+			err = errors.Join(fnInternItem(makeHandle, &data[i]))
+		}
+		return data, err
+	}
+}
+
+func internEnrichmentDataItemStrings(makeHandle makeHandleFunc, data *discovery_kit_api.EnrichmentData) error {
+	if data == nil {
+		return nil
+	}
+
+	data.Id = makeHandle(data.Id)
+	data.EnrichmentDataType = makeHandle(data.EnrichmentDataType)
+	for key, values := range data.Attributes {
+		for i, value := range values {
+			values[i] = makeHandle(value)
+		}
+		data.Attributes[makeHandle(key)] = values
+	}
+
+	return nil
+}
+
+func internTargetStrings(makeHandle makeHandleFunc, data *discovery_kit_api.Target) error {
+	if data == nil {
+		return nil
+	}
+
+	data.Id = makeHandle(data.Id)
+	data.TargetType = makeHandle(data.TargetType)
+	for key, values := range data.Attributes {
+		for i, value := range values {
+			values[i] = makeHandle(value)
+		}
+		data.Attributes[makeHandle(key)] = values
+	}
+
+	return nil
 }
