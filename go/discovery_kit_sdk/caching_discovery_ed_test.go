@@ -9,18 +9,18 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"sync"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func Test_enrichmentData_caching(t *testing.T) {
 	ctx := context.Background()
 
 	discovery := newMockEnrichmentDataDiscovery()
-	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataNow())
+	cached := NewCachedEnrichmentDataDiscovery(discovery)
 
-	discovery.WaitForNextDiscovery()
+	cached.Refresh(context.Background())
 	first, _ := cached.DiscoverEnrichmentData(ctx)
 	second, _ := cached.DiscoverEnrichmentData(ctx)
 
@@ -68,20 +68,21 @@ func Test_enrichmentData_caching_error(t *testing.T) {
 	discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{}, errors.New("test")).Once()
 	discovery.On("DiscoverEnrichmentData", mock.Anything).Return([]discovery_kit_api.EnrichmentData{{}}, nil).Once()
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	trigger := func() {
+		ch <- struct{}{}
+	}
+
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err := cached.DiscoverEnrichmentData(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err = cached.DiscoverEnrichmentData(ctx)
 	assert.Error(t, err)
 	assert.Len(t, data, 0)
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err = cached.DiscoverEnrichmentData(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
@@ -117,17 +118,17 @@ func Test_enrichmentData_cache_interval(t *testing.T) {
 	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataInterval(ctx, 20*time.Millisecond))
 
 	//should cache
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	first, _ := cached.DiscoverEnrichmentData(ctx)
 	second, _ := cached.DiscoverEnrichmentData(ctx)
 	assert.Equal(t, first, second)
 
 	//should refresh cache
 	first, _ = cached.DiscoverEnrichmentData(ctx)
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	second, _ = cached.DiscoverEnrichmentData(ctx)
 	assert.NotEqual(t, first, second)
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	third, _ := cached.DiscoverEnrichmentData(ctx)
 	assert.NotEqual(t, second, third)
 
@@ -147,18 +148,18 @@ func Test_enrichmentData_cache_trigger(t *testing.T) {
 	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataTrigger(ctx, ch, 0))
 
 	//should cache
-	discovery.WaitForNextDiscovery(func() {
+	trigger := func() {
 		ch <- struct{}{}
-	})
+	}
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
+
 	first, _ := cached.DiscoverEnrichmentData(ctx)
 	second, _ := cached.DiscoverEnrichmentData(ctx)
 	assert.Equal(t, first, second)
 
 	//should refresh cache
 	first, _ = cached.DiscoverEnrichmentData(ctx)
-	discovery.WaitForNextDiscovery(func() {
-		ch <- struct{}{}
-	})
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	second, _ = cached.DiscoverEnrichmentData(ctx)
 	assert.NotEqual(t, first, second)
 
@@ -184,7 +185,7 @@ func Test_enrichmentData_cache_trigger_throttle(t *testing.T) {
 	ch <- struct{}{}
 	ch <- struct{}{}
 	ch <- struct{}{}
-	discovery.WaitForNextDiscovery(func() {
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
 		ch <- struct{}{}
 	})
 	second, _ := cached.DiscoverEnrichmentData(ctx)
@@ -196,36 +197,101 @@ func Test_enrichmentData_cache_update(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	wg := sync.WaitGroup{}
-
 	discovery := newMockEnrichmentDataDiscovery()
 	ch := make(chan string)
 	updateFn := func(data []discovery_kit_api.EnrichmentData, update string) ([]discovery_kit_api.EnrichmentData, error) {
-		defer wg.Done()
 		if update == "clear" {
 			return []discovery_kit_api.EnrichmentData{}, nil
 		}
 		return data, nil
 	}
 	cached := NewCachedEnrichmentDataDiscovery(discovery,
-		WithRefreshEnrichmentDataNow(),
 		WithEnrichmentDataUpdate(ctx, ch, updateFn),
 	)
 
 	//should cache
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
+		cached.Refresh(context.Background())
+	})
 	first, _ := cached.DiscoverEnrichmentData(ctx)
 	second, _ := cached.DiscoverEnrichmentData(ctx)
 	assert.Equal(t, first, second)
 
 	//should update cache
 	first, _ = cached.DiscoverEnrichmentData(ctx)
-	wg.Add(1)
-	go func() {
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
 		ch <- "clear"
-	}()
-	wg.Wait()
+	})
 	second, _ = cached.DiscoverEnrichmentData(ctx)
 	assert.NotEqual(t, first, second)
 	assert.Empty(t, second)
+}
+
+func Test_enrichment_data_string_interning(t *testing.T) {
+	largeString := "ID: this is a very large string which should get unshared"
+	ctx := context.Background()
+
+	discovery := newMockEnrichmentDataDiscovery()
+	cached := NewCachedEnrichmentDataDiscovery(discovery)
+
+	discovery.On("DiscoverEnrichmentData", mock.Anything).Unset()
+	discovery.On("DiscoverEnrichmentData", ctx).Return([]discovery_kit_api.EnrichmentData{{
+		Id: largeString[:2],
+		Attributes: map[string][]string{
+			largeString[:2]: {largeString[4:]},
+		},
+	}}, nil)
+	cached.Refresh(ctx)
+	data, _ := cached.DiscoverEnrichmentData(ctx)
+
+	assert.Equal(t, "ID", data[0].Id)
+	assert.Equal(t, []string{"this is a very large string which should get unshared"}, data[0].Attributes["ID"])
+
+	assertSliceNotShared(t, largeString, data[0].Id)
+	for _, datum := range data {
+		for key, values := range datum.Attributes {
+			assertSliceNotShared(t, largeString, key)
+			for _, value := range values {
+				assertSliceNotShared(t, largeString, value)
+			}
+		}
+	}
+}
+
+func waitForLastModifiedChanges(t *testing.T, p p) {
+	triggerAndWaitForUpdate(t, p, nil)
+}
+
+func triggerAndWaitForUpdate(t *testing.T, cached p, trigger func()) {
+	t.Helper()
+
+	lm := cached.LastModified()
+	if trigger != nil {
+		trigger()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	for {
+		if lm != cached.LastModified() {
+			break
+		}
+		if ctx.Err() != nil {
+			t.Fatalf("timeout waiting for last modified changes")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+}
+
+func assertSliceNotShared(t *testing.T, haystack string, needle string) {
+	t.Helper()
+
+	pHayBegin := uintptr(unsafe.Pointer(unsafe.StringData(haystack)))
+	pHayEnd := uintptr(unsafe.Add(unsafe.Pointer(unsafe.StringData(haystack)), len(haystack)))
+	pNeedle := uintptr(unsafe.Pointer(unsafe.StringData(needle)))
+
+	if pNeedle >= pHayBegin && pNeedle < pHayEnd {
+		t.Errorf("slice is shared")
+	}
 }

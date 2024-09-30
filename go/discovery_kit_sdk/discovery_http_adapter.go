@@ -51,7 +51,7 @@ type discoveryHttpAdapter struct {
 
 func (a discoveryHttpAdapter) registerHandlers() {
 	discover := a.handleDiscover
-	if m, ok := a.discovery.(LastModifiedProvider); ok {
+	if m, ok := a.discovery.(p); ok {
 		discover = exthttp.IfNoneMatchHandler(func() string {
 			return strconv.FormatInt(m.LastModified().UnixMilli(), 10)
 		}, discover)

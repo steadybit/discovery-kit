@@ -26,12 +26,10 @@ type TestCase struct {
 }
 
 type TestContext struct {
-	targetDiscovery         *MockTargetDiscovery
-	enrichmentDataDiscovery *MockEnrichmentDataDiscovery
-	cachedDiscovery         *CachedTargetDiscovery
-	refreshTrigger          chan struct{}
-	api                     client.DiscoveryAPI
-	r                       *resty.Client
+	cachedDiscovery *CachedTargetDiscovery
+	refreshTrigger  chan struct{}
+	api             client.DiscoveryAPI
+	r               *resty.Client
 }
 
 func Test_discoveryHttpAdapter(t *testing.T) {
@@ -92,12 +90,10 @@ func Test_discoveryHttpAdapter(t *testing.T) {
 	api := client.NewDiscoveryClient("", httpClient)
 
 	tc := &TestContext{
-		targetDiscovery:         targetDiscovery,
-		cachedDiscovery:         cachedDiscovery,
-		enrichmentDataDiscovery: edDiscovery,
-		api:                     api,
-		r:                       httpClient,
-		refreshTrigger:          trigger,
+		cachedDiscovery: cachedDiscovery,
+		api:             api,
+		r:               httpClient,
+		refreshTrigger:  trigger,
 	}
 
 	for _, testCase := range testCases {
@@ -118,8 +114,9 @@ func testCachedDiscovery(t *testing.T, tc *TestContext) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotModified, res.StatusCode())
 
-	tc.refreshTrigger <- struct{}{}
-	tc.targetDiscovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, tc.cachedDiscovery, func() {
+		tc.refreshTrigger <- struct{}{}
+	})
 	res, err = tc.r.R().SetHeader("If-None-Match", etag).Get("/example/discovery/discovered-targets")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode())

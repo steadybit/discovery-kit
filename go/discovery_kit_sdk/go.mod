@@ -1,6 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
-go 1.22
+go 1.23
 
 require (
 	github.com/go-resty/resty/v2 v2.15.3
@@ -33,7 +33,7 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

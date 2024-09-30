@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Update to go 1.23
+- add `WithTargetStringInterning` / `WithEnrichmentDataStringInterning`
+
 ## 1.1.1
 
 - add http request to context

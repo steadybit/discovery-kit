@@ -51,7 +51,7 @@ type EnrichmentRulesDescriber interface {
 	DescribeEnrichmentRules() []discovery_kit_api.TargetEnrichmentRule
 }
 
-type LastModifiedProvider interface {
+type p interface {
 	LastModified() time.Time
 }
 

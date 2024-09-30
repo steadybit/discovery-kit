@@ -9,7 +9,6 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"sync"
 	"testing"
 	"time"
 )
@@ -18,9 +17,9 @@ func Test_target_caching(t *testing.T) {
 	ctx := context.Background()
 
 	discovery := newMockTargetDiscovery()
-	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsNow())
+	cached := NewCachedTargetDiscovery(discovery)
 
-	discovery.WaitForNextDiscovery()
+	cached.Refresh(context.Background())
 	first, _ := cached.DiscoverTargets(ctx)
 	second, _ := cached.DiscoverTargets(ctx)
 
@@ -68,20 +67,21 @@ func Test_target_caching_error(t *testing.T) {
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{}, errors.New("test")).Once()
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{}}, nil).Once()
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	trigger := func() {
+		ch <- struct{}{}
+	}
+
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err := cached.DiscoverTargets(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err = cached.DiscoverTargets(ctx)
 	assert.Error(t, err)
 	assert.Len(t, data, 0)
 
-	ch <- struct{}{}
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	data, err = cached.DiscoverTargets(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
@@ -118,17 +118,17 @@ func Test_target_cache_interval(t *testing.T) {
 	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsInterval(ctx, 20*time.Millisecond))
 
 	//should cache
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	first, _ := cached.DiscoverTargets(ctx)
 	second, _ := cached.DiscoverTargets(ctx)
 	assert.Equal(t, first, second)
 
 	//should refresh cache
 	first, _ = cached.DiscoverTargets(ctx)
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	second, _ = cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, first, second)
-	discovery.WaitForNextDiscovery()
+	waitForLastModifiedChanges(t, &cached.CachedDiscovery)
 	third, _ := cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, second, third)
 
@@ -147,19 +147,19 @@ func Test_target_cache_trigger(t *testing.T) {
 	ch := make(chan struct{})
 	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(ctx, ch, 0))
 
-	//should cache
-	discovery.WaitForNextDiscovery(func() {
+	trigger := func() {
 		ch <- struct{}{}
-	})
+	}
+
+	//should cache
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	first, _ := cached.DiscoverTargets(ctx)
 	second, _ := cached.DiscoverTargets(ctx)
 	assert.Equal(t, first, second)
 
 	//should refresh cache
 	first, _ = cached.DiscoverTargets(ctx)
-	discovery.WaitForNextDiscovery(func() {
-		ch <- struct{}{}
-	})
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, trigger)
 	second, _ = cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, first, second)
 
@@ -185,7 +185,7 @@ func Test_target_cache_trigger_throttle(t *testing.T) {
 	ch <- struct{}{}
 	ch <- struct{}{}
 	ch <- struct{}{}
-	discovery.WaitForNextDiscovery(func() {
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
 		ch <- struct{}{}
 	})
 	second, _ := cached.DiscoverTargets(ctx)
@@ -197,36 +197,63 @@ func Test_target_cache_update(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	wg := sync.WaitGroup{}
-
 	discovery := newMockTargetDiscovery()
 	ch := make(chan string)
 	updateFn := func(data []discovery_kit_api.Target, update string) ([]discovery_kit_api.Target, error) {
-		defer wg.Done()
 		if update == "clear" {
 			return []discovery_kit_api.Target{}, nil
 		}
 		return data, nil
 	}
 	cached := NewCachedTargetDiscovery(discovery,
-		WithRefreshTargetsNow(),
 		WithTargetsUpdate(ctx, ch, updateFn),
 	)
 
 	//should cache
-	discovery.WaitForNextDiscovery()
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
+		cached.Refresh(context.Background())
+	})
 	first, _ := cached.DiscoverTargets(ctx)
 	second, _ := cached.DiscoverTargets(ctx)
 	assert.Equal(t, first, second)
 
 	//should update cache
 	first, _ = cached.DiscoverTargets(ctx)
-	wg.Add(1)
-	go func() {
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
 		ch <- "clear"
-	}()
-	wg.Wait()
+	})
 	second, _ = cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, first, second)
 	assert.Empty(t, second)
+}
+
+func Test_target_string_interning(t *testing.T) {
+	largeString := "ID: this is a very large string which should get unshared"
+	ctx := context.Background()
+
+	discovery := newMockTargetDiscovery()
+	cached := NewCachedTargetDiscovery(discovery)
+
+	discovery.On("DiscoverTargets", mock.Anything).Unset()
+	discovery.On("DiscoverTargets", ctx).Return([]discovery_kit_api.Target{{
+		Id: largeString[:2],
+		Attributes: map[string][]string{
+			largeString[:2]: {largeString[4:]},
+		},
+	}}, nil)
+	cached.Refresh(ctx)
+	data, _ := cached.DiscoverTargets(ctx)
+
+	assert.Equal(t, "ID", data[0].Id)
+	assert.Equal(t, []string{"this is a very large string which should get unshared"}, data[0].Attributes["ID"])
+
+	assertSliceNotShared(t, largeString, data[0].Id)
+	for _, datum := range data {
+		for key, values := range datum.Attributes {
+			assertSliceNotShared(t, largeString, key)
+			for _, value := range values {
+				assertSliceNotShared(t, largeString, value)
+			}
+		}
+	}
 }
