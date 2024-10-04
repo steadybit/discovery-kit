@@ -348,6 +348,7 @@ func internTargetStrings(makeHandle makeHandleFunc, data *discovery_kit_api.Targ
 	}
 
 	data.Id = makeHandle(data.Id)
+	data.Label = makeHandle(data.Label)
 	data.TargetType = makeHandle(data.TargetType)
 	for key, values := range data.Attributes {
 		for i, value := range values {

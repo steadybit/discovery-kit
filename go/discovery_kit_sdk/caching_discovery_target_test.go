@@ -236,7 +236,8 @@ func Test_target_string_interning(t *testing.T) {
 
 	discovery.On("DiscoverTargets", mock.Anything).Unset()
 	discovery.On("DiscoverTargets", ctx).Return([]discovery_kit_api.Target{{
-		Id: largeString[:2],
+		Id:    largeString[:2],
+		Label: largeString[:2],
 		Attributes: map[string][]string{
 			largeString[:2]: {largeString[4:]},
 		},
@@ -248,6 +249,7 @@ func Test_target_string_interning(t *testing.T) {
 	assert.Equal(t, []string{"this is a very large string which should get unshared"}, data[0].Attributes["ID"])
 
 	assertSliceNotShared(t, largeString, data[0].Id)
+	assertSliceNotShared(t, largeString, data[0].Label)
 	for _, datum := range data {
 		for key, values := range datum.Attributes {
 			assertSliceNotShared(t, largeString, key)

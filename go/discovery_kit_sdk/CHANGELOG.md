@@ -1,9 +1,13 @@
 # Changelog
 
+## 1.2.1
+
+- Fix: add missing Target.Label to string interning
+
 ## 1.2.0
 
 - Update to go 1.23
-- add `WithTargetStringInterning` / `WithEnrichmentDataStringInterning`
+- Intern the discovery data strings by default
 
 ## 1.1.1
 
