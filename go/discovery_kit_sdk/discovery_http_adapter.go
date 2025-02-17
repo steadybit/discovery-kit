@@ -108,7 +108,7 @@ func (a discoveryHttpAdapter) checkForDuplicateTargets(targets []discovery_kit_a
 			log.Warn().
 				Str("id", target.Id).
 				Str("targetType", target.TargetType).
-				Msg("Duplicate enrichmentData detected.")
+				Msg("Duplicate target detected.")
 		} else {
 			seenTargets[key] = struct{}{}
 		}
