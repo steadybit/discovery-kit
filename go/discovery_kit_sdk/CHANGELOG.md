@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2, 1.2.3
+
+- Added a check for duplicate targets in the discovery data
+
 ## 1.2.1
 
 - Fix: add missing Target.Label to string interning
