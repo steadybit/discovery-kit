@@ -129,7 +129,7 @@ func registerEnrichmentRuleContributor(o interface{}) bool {
 }
 
 func GetDiscoveryList() discovery_kit_api.DiscoveryList {
-	checkForDuplicates(mergeAllAttributeDescriptions())
+	checkForDuplicatesAttributeDescriptions(mergeAllAttributeDescriptions())
 
 	return discovery_kit_api.DiscoveryList{
 		Discoveries:           getDiscoveryReferences(),
@@ -195,7 +195,7 @@ func mergeAllAttributeDescriptions() []discovery_kit_api.AttributeDescription {
 	return result
 }
 
-func checkForDuplicates(descriptions []discovery_kit_api.AttributeDescription) {
+func checkForDuplicatesAttributeDescriptions(descriptions []discovery_kit_api.AttributeDescription) {
 	var duplicateCheck = make(map[string]int)
 
 	for _, description := range descriptions {
