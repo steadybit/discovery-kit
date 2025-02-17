@@ -95,12 +95,20 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 	exthttp.WriteBody(w, body)
 }
 
+type duplicateCheckKey struct {
+	Id   string
+	Type string
+}
+
 func (a discoveryHttpAdapter) checkForDuplicateTargets(targets []discovery_kit_api.Target) {
-	seenTargets := make(map[string]struct{})
+	seenTargets := make(map[duplicateCheckKey]struct{})
 	for _, target := range targets {
-		key := target.Id + "|" + target.TargetType
+		key := duplicateCheckKey{Id: target.Id, Type: target.TargetType}
 		if _, exists := seenTargets[key]; exists {
-			log.Warn().Str("id", target.Id).Str("targetType", target.TargetType).Msg("Duplicate target detected.")
+			log.Warn().
+				Str("id", target.Id).
+				Str("targetType", target.TargetType).
+				Msg("Duplicate enrichmentData detected.")
 		} else {
 			seenTargets[key] = struct{}{}
 		}
@@ -108,11 +116,14 @@ func (a discoveryHttpAdapter) checkForDuplicateTargets(targets []discovery_kit_a
 }
 
 func (a discoveryHttpAdapter) checkForDuplicateEnrichmentData(targets []discovery_kit_api.EnrichmentData) {
-	seenTargets := make(map[string]struct{})
+	seenTargets := make(map[duplicateCheckKey]struct{})
 	for _, target := range targets {
-		key := target.Id + "|" + target.EnrichmentDataType
+		key := duplicateCheckKey{Id: target.Id, Type: target.EnrichmentDataType}
 		if _, exists := seenTargets[key]; exists {
-			log.Warn().Str("id", target.Id).Str("targetType", target.EnrichmentDataType).Msg("Duplicate enrichmentData detected.")
+			log.Warn().
+				Str("id", target.Id).
+				Str("targetType", target.EnrichmentDataType).
+				Msg("Duplicate enrichmentData detected.")
 		} else {
 			seenTargets[key] = struct{}{}
 		}
