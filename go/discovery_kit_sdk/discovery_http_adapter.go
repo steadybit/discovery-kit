@@ -7,7 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	discovery_kit_api "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
@@ -73,6 +74,7 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 	newCtx := context.WithValue(r.Context(), key, r)
 	if t, ok := a.discovery.(TargetDiscovery); ok {
 		targets, err := t.DiscoverTargets(newCtx)
+		a.checkForDuplicateTargets(targets)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
@@ -80,6 +82,7 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
 		data, err := e.DiscoverEnrichmentData(newCtx)
+		a.checkForDuplicateEnrichmentData(data)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
 		}
@@ -90,4 +93,28 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	exthttp.WriteBody(w, body)
+}
+
+func (a discoveryHttpAdapter) checkForDuplicateTargets(targets []discovery_kit_api.Target) {
+	seenTargets := make(map[string]struct{})
+	for _, target := range targets {
+		key := target.Id + "|" + target.TargetType
+		if _, exists := seenTargets[key]; exists {
+			log.Warn().Str("id", target.Id).Str("targetType", target.TargetType).Msg("Duplicate target detected.")
+		} else {
+			seenTargets[key] = struct{}{}
+		}
+	}
+}
+
+func (a discoveryHttpAdapter) checkForDuplicateEnrichmentData(targets []discovery_kit_api.EnrichmentData) {
+	seenTargets := make(map[string]struct{})
+	for _, target := range targets {
+		key := target.Id + "|" + target.EnrichmentDataType
+		if _, exists := seenTargets[key]; exists {
+			log.Warn().Str("id", target.Id).Str("targetType", target.EnrichmentDataType).Msg("Duplicate enrichmentData detected.")
+		} else {
+			seenTargets[key] = struct{}{}
+		}
+	}
 }
