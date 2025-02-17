@@ -1,6 +1,7 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_test
 
-go 1.22
+go 1.23
+
 require (
 	github.com/getkin/kin-openapi v0.129.0
 	github.com/go-resty/resty/v2 v2.16.5
