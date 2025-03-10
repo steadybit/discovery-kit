@@ -1,14 +1,13 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_test
 
 go 1.23
-
 require (
 	github.com/getkin/kin-openapi v0.129.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.6.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.22.0
+	golang.org/x/text v0.23.0
 )
 
 require (
