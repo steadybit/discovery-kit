@@ -1,7 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
 go 1.23
-
 require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
@@ -32,8 +31,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
