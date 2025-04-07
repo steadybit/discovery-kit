@@ -9,7 +9,7 @@ require (
 	github.com/jarcoal/httpmock v1.4.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.6.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.23.0
+	golang.org/x/text v0.24.0
 )
 
 require (
