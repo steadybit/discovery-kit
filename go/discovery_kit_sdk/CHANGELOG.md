@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Update dependencies (golang 1.24)
+
 ## 1.2.2, 1.2.3
 
 - Added a check for duplicate targets in the discovery data

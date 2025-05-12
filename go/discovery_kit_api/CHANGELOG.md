@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.7.0
+- Update dependencies (golang 1.24)
+
 ## 1.6.0
 - Removed `RestrictedTo` from `DiscoveryDescription`
 
