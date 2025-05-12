@@ -2,7 +2,7 @@ module github.com/steadybit/discovery-kit/go/discovery_kit_commons
 
 go 1.24
 
-require github.com/steadybit/discovery-kit/go/discovery_kit_api v1.6.0
+require github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.0
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
