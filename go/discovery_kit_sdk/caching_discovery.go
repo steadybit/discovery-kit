@@ -21,6 +21,7 @@ type discoverFn[T any] func(ctx context.Context) ([]T, error)
 type CachedDiscovery[T any] struct {
 	Discovery
 
+	id           string
 	mu           sync.RWMutex
 	lastModified time.Time
 	supplier     discoverFn[T]
@@ -53,6 +54,7 @@ func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[disc
 	c := &CachedTargetDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.Target]{
 			Discovery: d,
+			id:        d.Describe().Id,
 			supplier:  recoverable(internStrings(internTargetStrings, d.DiscoverTargets)),
 			data:      make([]discovery_kit_api.Target, 0),
 		},
@@ -117,7 +119,7 @@ type UpdateFn[U any] func(U) (U, error)
 
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	lastModified := time.Now()
-	log.Trace().Msg("updating discovery")
+	log.Trace().Str("id", c.id).Msg("updating discovery")
 	data, err := fn(c.data)
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -125,12 +127,12 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	c.data = data
 	c.err = err
 	if err == nil {
-		log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
+		log.Debug().Str("id", c.id).TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
 	} else {
 		var extensionError extension_kit.ExtensionError
 		isExtensionError := errors.As(err, &extensionError)
 		if isExtensionError {
-			logEvent := log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Str("title", extensionError.Title)
+			logEvent := log.Warn().Str("id", c.id).TimeDiff("duration", time.Now(), c.lastModified).Str("title", extensionError.Title)
 			if extensionError.Detail != nil {
 				logEvent = logEvent.Str("detail", *extensionError.Detail)
 			}
@@ -139,7 +141,7 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 			}
 			logEvent.Msg("discovery update failed")
 		} else {
-			log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
+			log.Warn().Str("id", c.id).TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
 		}
 	}
 }
@@ -190,7 +192,10 @@ func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, throttle
 				return nil
 			}, throttlePeriod)
 			fn = func(ctx context.Context) {
-				debounced(ctx)
+				// Run debounce in a separate goroutine to avoid blocking processing of the event channel and to maintain the intended debounce interval.
+				go func() {
+					debounced(ctx)
+				}()
 			}
 		}
 

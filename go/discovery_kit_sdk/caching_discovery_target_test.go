@@ -183,6 +183,7 @@ func Test_target_cache_trigger_throttle(t *testing.T) {
 	first, _ := cached.DiscoverTargets(ctx)
 	ch <- struct{}{}
 	ch <- struct{}{}
+	time.Sleep(100 * time.Millisecond)
 	ch <- struct{}{}
 	ch <- struct{}{}
 	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
@@ -191,6 +192,50 @@ func Test_target_cache_trigger_throttle(t *testing.T) {
 	second, _ := cached.DiscoverTargets(ctx)
 	assert.NotEqual(t, first, second)
 	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 2)
+}
+
+func Test_target_cache_trigger_throttle_call_after_timeout(t *testing.T) {
+	discovery := newMockTargetDiscovery()
+
+	ch := make(chan struct{}, 10)
+	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(t.Context(), ch, 50*time.Millisecond))
+
+	for i := 0; i < 10; i++ {
+		ch <- struct{}{}
+		time.Sleep(10 * time.Millisecond)
+	}
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
+		ch <- struct{}{}
+	})
+
+	// Calls at 0, 5, 100, 150ms, as refresh is executed every at the beginning and after every
+	// debounce interval of 50ms. As there are events in the last interval one call is executed
+	// after the events stop and the interval is completed.
+	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 4)
+}
+
+func Test_target_cache_trigger_throttle_long_running(t *testing.T) {
+	discovery := newMockTargetDiscovery()
+	discovery.On("DiscoverTargets", mock.Anything).Unset()
+	call := discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{}, nil) //.Once()
+	call.RunFn = func(args mock.Arguments) {
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	ch := make(chan struct{}, 10)
+	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsTrigger(t.Context(), ch, 10*time.Millisecond))
+
+	for i := 0; i < 10; i++ {
+		ch <- struct{}{}
+		time.Sleep(10 * time.Millisecond)
+	}
+	triggerAndWaitForUpdate(t, &cached.CachedDiscovery, func() {
+		ch <- struct{}{}
+	})
+
+	// Execution takes longer than the 10ms debounce time. As other events are fired during that time,
+	// the debounced function is executed right away again after it finishes.
+	discovery.AssertNumberOfCalls(t, "DiscoverTargets", 4)
 }
 
 func Test_target_cache_update(t *testing.T) {
