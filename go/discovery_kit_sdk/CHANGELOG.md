@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+
+- fix: fatal error: concurrent map iteration and map write
+
 ## 1.3.0
 
 - Update dependencies (golang 1.24)
