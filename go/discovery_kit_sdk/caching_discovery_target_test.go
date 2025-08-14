@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package discovery_kit_sdk
 
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -258,4 +259,46 @@ func Test_target_string_interning(t *testing.T) {
 			}
 		}
 	}
+}
+
+func Test_target_string_interning_concurrent_modification(t *testing.T) {
+	ctx := context.Background()
+
+	discovery := newMockTargetDiscovery()
+	cached := NewCachedTargetDiscovery(discovery)
+
+	targets := make([]discovery_kit_api.Target, 1000)
+	for i := range targets {
+		targets[i] = discovery_kit_api.Target{
+			Id:         fmt.Sprintf("target-%d", i),
+			TargetType: "example",
+			Label:      "Example Target",
+			Attributes: map[string][]string{
+				"example": {"yes"},
+				"id":      {fmt.Sprintf("target-%d", i)},
+			},
+		}
+	}
+
+	discovery.On("DiscoverTargets", mock.Anything).Unset()
+	discovery.On("DiscoverTargets", ctx).Return(targets, nil)
+
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Error().Any("err", err).Msgf("recovered")
+			}
+		}()
+
+		for {
+			for i := range targets {
+				targets[i].Attributes["loop"] = []string{fmt.Sprintf("loop-%d", i)}
+			}
+		}
+	}()
+
+	assert.NotPanics(t, func() {
+		cached.Refresh(ctx)
+		_, _ = cached.DiscoverTargets(ctx)
+	})
 }
