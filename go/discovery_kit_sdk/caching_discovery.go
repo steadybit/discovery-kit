@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package discovery_kit_sdk
 
@@ -303,14 +302,14 @@ func WithRefreshTimeout[T any](timeout time.Duration) CachedDiscoveryOpt[T] {
 
 type makeHandleFunc func(s string) string
 
-func internStrings[T any](fnInternItem func(makeHandleFunc, *T) error, fn discoverFn[T]) discoverFn[T] {
+func internStrings[T any](fnInternItem func(makeHandleFunc, T) T, fn discoverFn[T]) discoverFn[T] {
 	return func(ctx context.Context) ([]T, error) {
 		data, err := fn(ctx)
 		if err != nil || len(data) == 0 {
 			return data, err
 		}
 
-		//keep handles until all are process so gc won't remove them and break the deduplication
+		//keep handles until all are processed so gc won't remove them and break the deduplication
 		handles := make([]unique.Handle[string], len(data))
 		makeHandle := func(s string) string {
 			h := unique.Make(s)
@@ -318,44 +317,39 @@ func internStrings[T any](fnInternItem func(makeHandleFunc, *T) error, fn discov
 			return h.Value()
 		}
 
+		newData := make([]T, len(data))
 		for i := range data {
-			err = errors.Join(fnInternItem(makeHandle, &data[i]))
+			newData[i] = fnInternItem(makeHandle, data[i])
 		}
-		return data, err
+		return newData, err
 	}
 }
 
-func internEnrichmentDataItemStrings(makeHandle makeHandleFunc, data *discovery_kit_api.EnrichmentData) error {
-	if data == nil {
-		return nil
+func internEnrichmentDataItemStrings(makeHandle makeHandleFunc, data discovery_kit_api.EnrichmentData) discovery_kit_api.EnrichmentData {
+	return discovery_kit_api.EnrichmentData{
+		Id:                 makeHandle(data.Id),
+		EnrichmentDataType: makeHandle(data.EnrichmentDataType),
+		Attributes:         internAttributes(makeHandle, data.Attributes),
 	}
-
-	data.Id = makeHandle(data.Id)
-	data.EnrichmentDataType = makeHandle(data.EnrichmentDataType)
-	for key, values := range data.Attributes {
-		for i, value := range values {
-			values[i] = makeHandle(value)
-		}
-		data.Attributes[makeHandle(key)] = values
-	}
-
-	return nil
 }
 
-func internTargetStrings(makeHandle makeHandleFunc, data *discovery_kit_api.Target) error {
-	if data == nil {
-		return nil
+func internTargetStrings(makeHandle makeHandleFunc, data discovery_kit_api.Target) discovery_kit_api.Target {
+	return discovery_kit_api.Target{
+		Id:         makeHandle(data.Id),
+		Label:      makeHandle(data.Label),
+		TargetType: makeHandle(data.TargetType),
+		Attributes: internAttributes(makeHandle, data.Attributes),
 	}
+}
 
-	data.Id = makeHandle(data.Id)
-	data.Label = makeHandle(data.Label)
-	data.TargetType = makeHandle(data.TargetType)
-	for key, values := range data.Attributes {
+func internAttributes(makeHandle makeHandleFunc, attributes map[string][]string) map[string][]string {
+	var newAttributes = make(map[string][]string, len(attributes))
+	for key, values := range attributes {
+		var newValues = make([]string, len(values))
 		for i, value := range values {
-			values[i] = makeHandle(value)
+			newValues[i] = makeHandle(value)
 		}
-		data.Attributes[makeHandle(key)] = values
+		newAttributes[makeHandle(key)] = newValues
 	}
-
-	return nil
+	return newAttributes
 }
