@@ -10,6 +10,7 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"slices"
 	"testing"
 	"time"
 )
@@ -281,7 +282,10 @@ func Test_target_string_interning_concurrent_modification(t *testing.T) {
 	}
 
 	discovery.On("DiscoverTargets", mock.Anything).Unset()
-	discovery.On("DiscoverTargets", ctx).Return(targets, nil)
+	call := discovery.On("DiscoverTargets", ctx)
+	call.RunFn = func(args mock.Arguments) {
+		call.Return(slices.Clone(targets))
+	}
 
 	go func() {
 		defer func() {
