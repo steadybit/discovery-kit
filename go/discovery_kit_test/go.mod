@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-resty/resty/v2 v2.16.5
-	github.com/jarcoal/httpmock v1.4.0
+	github.com/jarcoal/httpmock v1.4.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.0
 	github.com/stretchr/testify v1.11.0
 	golang.org/x/text v0.28.0
