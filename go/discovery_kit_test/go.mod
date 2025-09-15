@@ -1,6 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_test
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/getkin/kin-openapi v0.133.0
@@ -8,7 +8,7 @@ require (
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/text v0.28.0
+	golang.org/x/text v0.29.0
 )
 
 require (
