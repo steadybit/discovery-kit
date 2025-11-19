@@ -32,7 +32,7 @@ jobs:
     - uses: actions/setup-go@v6
       with:
         cache-dependency-path: ./go/discovery_kit_api
-        go-version: '1.24'
+        go-version: '^1.25.4'
     - run: ./build.sh
     - run: git diff --exit-code
       name: "Ensure that Go API changes (as a consequence of OpenAPI spec changes) are checked in"
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           cache-dependency-path: ./go/discovery_kit_test
-          go-version: '1.24'
+          go-version: '^1.25.4'
       - name: Audit
         run: |
           go mod download
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           cache-dependency-path: ./go/discovery_kit_commons
-          go-version: '1.24'
+          go-version: '^1.25.4'
       - name: Audit
         run: |
           go mod download
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           cache-dependency-path: ./go/discovery_kit_sdk
-          go-version: '1.24'
+          go-version: '^1.25.4'
       - name: Audit
         run: |
           go mod download
