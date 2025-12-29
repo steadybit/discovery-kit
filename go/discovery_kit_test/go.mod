@@ -6,7 +6,7 @@ toolchain go1.25.4
 
 require (
 	github.com/getkin/kin-openapi v0.133.0
-	github.com/go-resty/resty/v2 v2.17.0
+	github.com/go-resty/resty/v2 v2.17.1
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
 	github.com/stretchr/testify v1.11.1
