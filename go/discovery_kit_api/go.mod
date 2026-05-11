@@ -5,7 +5,7 @@ go 1.25
 toolchain go1.25.4
 
 require (
-	github.com/getkin/kin-openapi v0.137.0
+	github.com/getkin/kin-openapi v0.138.0
 	github.com/oapi-codegen/runtime v1.4.0
 )
 
