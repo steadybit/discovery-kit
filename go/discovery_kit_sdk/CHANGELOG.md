@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3
+
+- Support setting "STEADYBIT_EXTENSION_DISCOVERY_GROUP" environment variable to set the "steadybit.group" attribute for all discovered targets and enrichment data records.
+
 ## 1.3.2
 
 - Update dependencies
