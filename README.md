@@ -11,4 +11,6 @@ We recommend that you read the following documentation to get started with Disco
 - [Discovery API](/docs/discovery-api.md)
 - [Discovery Registration](/docs/discovery-registration.md)
 - [Terminology](/docs/terminology.md)
+- [Target Enrichment](/docs/target-enrichment.md)
+- [Reserved Target Attributes](/docs/reserved-target-attributes.md)
 - [Extension-Scaffold](https://github.com/steadybit/extension-scaffold/blob/main/README.md)

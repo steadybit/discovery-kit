@@ -74,6 +74,12 @@ Note that `$.enrichmentRules[*].src.type` and `$.enrichmentRules[*].dest.type` d
 - CONTAINS: The source attribute name must contain the attribute name provided.
 - STARTS_WITH: The source attribute name must start with the attribute name provided.
 
+## Group Matching
+
+Every target carries a `steadybit.group` attribute (defaulting to `default`, overridable per extension via the `STEADYBIT_EXTENSION_GROUP` environment variable). All enrichment rules use this attribute as an additional implicit matcher: a source target only enriches a destination target when both share the same `steadybit.group` value.
+
+This lets you slice targets along a dimension that is not part of the discovered data — for example, to keep environments separate when the same Steadybit installation discovers targets from multiple stages or tenants, and to prevent enrichment rules from matching across those groups. See [Reserved Target Attributes](./reserved-target-attributes.md) for the full list of reserved attributes.
+
 ## FAQ
 
 ### I have changed target enrichment rules, but nothing happens in Steadybit?
