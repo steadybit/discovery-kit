@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -20,8 +19,6 @@ import (
 
 const (
 	defaultCallInterval = "30s"
-	groupAttributeKey   = "steadybit.group"
-	groupEnvVar         = "STEADYBIT_EXTENSION_DISCOVERY_GROUP"
 )
 
 func newDiscoveryHttpAdapter(discovery Discovery) *discoveryHttpAdapter {
@@ -76,20 +73,11 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 	var allErrs error
 	var key HttpRequestContextKey = "httpRequest"
 	newCtx := context.WithValue(r.Context(), key, r)
-	group := os.Getenv(groupEnvVar)
 	if t, ok := a.discovery.(TargetDiscovery); ok {
 		targets, err := t.DiscoverTargets(newCtx)
 		a.checkForDuplicateTargets(targets)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
-		}
-		if group != "" {
-			for i := range targets {
-				if targets[i].Attributes == nil {
-					targets[i].Attributes = map[string][]string{}
-				}
-				targets[i].Attributes[groupAttributeKey] = []string{group}
-			}
 		}
 		body.Targets = extutil.Ptr(targets)
 	}
@@ -98,14 +86,6 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		a.checkForDuplicateEnrichmentData(data)
 		if err != nil {
 			allErrs = errors.Join(allErrs, err)
-		}
-		if group != "" {
-			for i := range data {
-				if data[i].Attributes == nil {
-					data[i].Attributes = map[string][]string{}
-				}
-				data[i].Attributes[groupAttributeKey] = []string{group}
-			}
 		}
 		body.EnrichmentData = extutil.Ptr(data)
 	}

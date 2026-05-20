@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.4
+
+- fix: fatal error introduced with 1.3.3: concurrent map iteration and map write when STEADYBIT_EXTENSION_DISCOVERY_GROUP is set. The group attribute is now applied once per refresh in the supplier chain of the cache (CachedTargetDiscovery / CachedDataEnrichmentDiscovery), where the attribute map is freshly allocated and not yet shared with any reader. Previously it was written into the cache's map at every HTTP request, which caused the panic under concurrent requests.
+- feat: expose the group-attribute injection as a public `CachedDiscoveryOpt`: `WithGroupAttribute[T]` plus typed wrappers `WithTargetsGroupAttribute` / `WithEnrichmentDataGroupAttribute`. Auto-applied by `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery`, so existing callers need no changes.
+
 ## 1.3.3
 
 - Support setting "STEADYBIT_EXTENSION_DISCOVERY_GROUP" environment variable to set the "steadybit.group" attribute for all discovered targets and enrichment data records.
