@@ -12,6 +12,6 @@ Added by the agent and identifies the specific extension instance that reported 
 
 ## `steadybit.group`
 
-Defaults to `default` (set by the agent). Can be overridden per extension by setting the environment variable `STEADYBIT_EXTENSION_GROUP`; the discovery-kit SDK then injects the value into every target and enrichment data record reported by that extension instance.
+Defaults to `default` (set by the agent). Can be overridden per extension by setting the environment variable `STEADYBIT_EXTENSION_DISCOVERY_GROUP` (or helm `discovery.group`); the discovery-kit SDK then injects the value into every target and enrichment data record reported by that extension instance.
 
 All enrichment rules include `steadybit.group` as an additional matcher. This lets you slice targets along a dimension that is not part of the discovered data — for example, to keep environments separate when the same Steadybit installation discovers targets from multiple stages or tenants, and to prevent the enrichment rules from matching across those groups.

@@ -7,20 +7,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
-	"os"
-	"strconv"
 )
 
 const (
 	defaultCallInterval = "30s"
 	groupAttributeKey   = "steadybit.group"
-	groupEnvVar         = "STEADYBIT_EXTENSION_GROUP"
+	groupEnvVar         = "STEADYBIT_EXTENSION_DISCOVERY_GROUP"
 )
 
 func newDiscoveryHttpAdapter(discovery Discovery) *discoveryHttpAdapter {
