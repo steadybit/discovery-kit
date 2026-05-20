@@ -1,9 +1,12 @@
 # Changelog
 
+## 1.3.5
+
+- fix: restore universal application of the discovery group attribute. v1.3.4 moved injection into the cache supplier chain, which skipped discoveries registered without `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery` (and any path going through `WithUpdate`). Injection now happens again in the HTTP discovery adapter, but each request builds a fresh copy of every target's attributes before adding `steadybit.group`. The discovery's underlying maps are never mutated, so this is safe under any level of concurrency and works for cached, non-cached, and incrementally-updated discoveries alike.
+
 ## 1.3.4
 
-- fix: fatal error introduced with 1.3.3: concurrent map iteration and map write when STEADYBIT_EXTENSION_DISCOVERY_GROUP is set. The group attribute is now applied once per refresh in the supplier chain of the cache (CachedTargetDiscovery / CachedDataEnrichmentDiscovery), where the attribute map is freshly allocated and not yet shared with any reader. Previously it was written into the cache's map at every HTTP request, which caused the panic under concurrent requests.
-- feat: expose the group-attribute injection as a public `CachedDiscoveryOpt`: `WithGroupAttribute[T]` plus typed wrappers `WithTargetsGroupAttribute` / `WithEnrichmentDataGroupAttribute`. Auto-applied by `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery`, so existing callers need no changes.
+- fix (incomplete; superseded by 1.3.5): concurrent map iteration and map write when STEADYBIT_EXTENSION_DISCOVERY_GROUP is set. Group injection was moved into the cache supplier chain, fixing the crash but silently dropping the attribute for non-cached discoveries.
 
 ## 1.3.3
 

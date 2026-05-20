@@ -5,7 +5,6 @@ package discovery_kit_sdk
 import (
 	"context"
 	"errors"
-	"os"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -15,11 +14,6 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/zmwangx/debounce"
-)
-
-const (
-	groupAttributeKey = "steadybit.group"
-	groupEnvVar       = "STEADYBIT_EXTENSION_DISCOVERY_GROUP"
 )
 
 type discoverFn[T any] func(ctx context.Context) ([]T, error)
@@ -54,8 +48,7 @@ var (
 	_ Unwrapper               = (*CachedDataEnrichmentDiscovery)(nil)
 )
 
-// NewCachedTargetDiscovery returns a caching target discovery. The discovery group
-// attribute is applied by default (see WithTargetsGroupAttribute).
+// NewCachedTargetDiscovery returns a caching target discovery.
 func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[discovery_kit_api.Target]) *CachedTargetDiscovery {
 	c := &CachedTargetDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.Target]{
@@ -64,8 +57,6 @@ func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[disc
 			data:      make([]discovery_kit_api.Target, 0),
 		},
 	}
-	// Built-in defaults — applied before user opts so callers can wrap them further if needed.
-	WithTargetsGroupAttribute()(&c.CachedDiscovery)
 	for _, opt := range opts {
 		opt(&c.CachedDiscovery)
 	}
@@ -76,8 +67,7 @@ func (c *CachedTargetDiscovery) DiscoverTargets(_ context.Context) ([]discovery_
 	return c.CachedDiscovery.Get()
 }
 
-// NewCachedEnrichmentDataDiscovery returns a caching enrichment data discovery. The
-// discovery group attribute is applied by default (see WithEnrichmentDataGroupAttribute).
+// NewCachedEnrichmentDataDiscovery returns a caching enrichment data discovery.
 func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedDiscoveryOpt[discovery_kit_api.EnrichmentData]) *CachedDataEnrichmentDiscovery {
 	c := &CachedDataEnrichmentDiscovery{
 		CachedDiscovery: CachedDiscovery[discovery_kit_api.EnrichmentData]{
@@ -86,8 +76,6 @@ func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedD
 			data:      make([]discovery_kit_api.EnrichmentData, 0),
 		},
 	}
-	// Built-in defaults — applied before user opts so callers can wrap them further if needed.
-	WithEnrichmentDataGroupAttribute()(&c.CachedDiscovery)
 	for _, opt := range opts {
 		opt(&c.CachedDiscovery)
 	}
@@ -365,58 +353,4 @@ func internAttributes(makeHandle makeHandleFunc, attributes map[string][]string)
 		newAttributes[makeHandle(key)] = newValues
 	}
 	return newAttributes
-}
-
-// WithGroupAttribute decorates the supplier so that every refresh sets the
-// "steadybit.group" attribute on every discovered item to the value of the
-// STEADYBIT_EXTENSION_DISCOVERY_GROUP environment variable. The decorator is a
-// no-op when the env var is empty.
-//
-// Applied by default by NewCachedTargetDiscovery and NewCachedEnrichmentDataDiscovery
-// so the env var works out of the box. Exposed publicly so callers building a
-// CachedDiscovery directly can opt in explicitly.
-func WithGroupAttribute[T any](set func(*T, string)) CachedDiscoveryOpt[T] {
-	return func(m *CachedDiscovery[T]) {
-		supplier := m.supplier
-		m.supplier = func(ctx context.Context) ([]T, error) {
-			data, err := supplier(ctx)
-			if err != nil || len(data) == 0 {
-				return data, err
-			}
-			group := os.Getenv(groupEnvVar)
-			if group == "" {
-				return data, err
-			}
-			// Safe to mutate in place: the preceding internStrings step has just
-			// allocated fresh attribute maps that aren't yet shared with any reader.
-			for i := range data {
-				set(&data[i], group)
-			}
-			return data, err
-		}
-	}
-}
-
-// WithTargetsGroupAttribute is the Target-typed convenience wrapper for WithGroupAttribute.
-func WithTargetsGroupAttribute() CachedDiscoveryOpt[discovery_kit_api.Target] {
-	return WithGroupAttribute[discovery_kit_api.Target](setTargetGroup)
-}
-
-// WithEnrichmentDataGroupAttribute is the EnrichmentData-typed convenience wrapper for WithGroupAttribute.
-func WithEnrichmentDataGroupAttribute() CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
-	return WithGroupAttribute[discovery_kit_api.EnrichmentData](setEnrichmentDataGroup)
-}
-
-func setTargetGroup(t *discovery_kit_api.Target, group string) {
-	if t.Attributes == nil {
-		t.Attributes = map[string][]string{}
-	}
-	t.Attributes[groupAttributeKey] = []string{group}
-}
-
-func setEnrichmentDataGroup(d *discovery_kit_api.EnrichmentData, group string) {
-	if d.Attributes == nil {
-		d.Attributes = map[string][]string{}
-	}
-	d.Attributes[groupAttributeKey] = []string{group}
 }
