@@ -103,12 +103,17 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 	exthttp.WriteBody(w, body)
 }
 
-// normalizeTargets returns a defensive copy of the target list where each Attributes map is a
-// fresh copy with multi-valued slices sorted, and (optionally) the steadybit.group attribute set.
+// normalizeTargets ensures every multi-valued attribute slice in the response is sorted, and
+// optionally injects the steadybit.group attribute on every target. It has two branches:
 //
-// The discovery's underlying maps are never mutated, which keeps concurrent calls to handleDiscover
-// safe — without the copy, two requests could write to the same cached map while a third was
-// iterating it for JSON encoding, causing a "concurrent map iteration and map write" panic.
+//   - Fast path (group == "" AND every multi-valued slice is already sorted): the input slice is
+//     returned verbatim, no allocation. The discovery's underlying maps are caller-visible through
+//     the return value, so callers MUST NOT mutate them. This keeps the no-work-needed case free
+//     of GC pressure on large-fan-out discoveries.
+//   - Slow path (group set OR any multi-valued slice unsorted): returns a fresh slice where each
+//     Attributes map is a fresh copy with multi-valued slices sorted into a new backing array.
+//     The source maps are never mutated, so concurrent calls to handleDiscover stay safe under
+//     JSON encoding even though the discovery cache may rebuild its internal maps in-flight.
 //
 // The sort is the load-bearing part: the platform's target-diff detector compares multi-valued
 // attribute slices by position, so extensions that build them from a Go map or a Kubernetes
@@ -119,7 +124,8 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 // Note for extensions: multi-valued attributes are normalized as **sets**. If you use parallel
 // multi-valued attributes (where the i-th element of one pairs with the i-th of another), pre-sort
 // your source so the per-attribute sort here keeps the pairing aligned, or encode paired values
-// into a single self-contained string per entry.
+// into a single self-contained string per entry. See docs/discovery-api.md, section
+// "Multi-valued Attribute Values".
 func normalizeTargets(targets []discovery_kit_api.Target, group string) []discovery_kit_api.Target {
 	if !targetsNeedNormalize(targets, group) {
 		return targets

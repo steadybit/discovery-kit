@@ -9,6 +9,7 @@ import (
 
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_normalizeTargets_copies_map_when_group_set(t *testing.T) {
@@ -105,6 +106,11 @@ func Test_normalizeAttributes_sorts_multivalued(t *testing.T) {
 	assert.Equal(t, []string{"only"}, out["single"], "single-valued slice untouched")
 	assert.Equal(t, []string{"aaa", "bbb", "ccc"}, out["k8s.hpa"], "multi-valued slice sorted")
 	assert.Equal(t, []string{"aaa", "zzz"}, out["k8s.pdb"], "multi-valued slice sorted")
+	// group=="" must NOT inject a steadybit.group attribute — without this assertion a regression
+	// that drops the `if group != ""` guard would silently ship phantom `steadybit.group: [""]`
+	// attributes on every target.
+	_, hasGroup := out[groupAttributeKey]
+	assert.False(t, hasGroup, "group key must be absent when group is empty")
 	// Both source slices must be untouched (catches an in-place-sort regression
 	// even when one attribute happens to be 2 elements — the case most likely
 	// to be "optimised" into a swap-in-place).
@@ -133,20 +139,63 @@ func Test_normalizeAttributes_sorts_multivalued_with_group(t *testing.T) {
 // targets whose multi-valued attributes are already sorted and that have no
 // group configured are returned without a fresh allocation. Avoids a
 // per-cycle map-copy regression on large-fan-out discoveries.
+//
+// The test asserts the *backing array is shared* (slice header identity), not
+// caller-visible mutation through the boundary. A future maintainer who
+// legitimately reintroduces a defensive copy (e.g. to harden against a new
+// mutate-after-return contract) should be able to revisit this test by
+// changing the assertion — not be tempted to revert their copy.
 func Test_normalizeTargets_fast_path_no_copy_when_already_sorted(t *testing.T) {
-	original := map[string][]string{
-		"single":  {"only"},
-		"k8s.hpa": {"aaa", "bbb", "ccc"}, // already sorted
+	targets := []discovery_kit_api.Target{
+		{Id: "a", Attributes: map[string][]string{"single": {"only"}, "k8s.hpa": {"aaa", "bbb", "ccc"}}},
+		{Id: "b", Attributes: map[string][]string{"k8s.pdb": {"aaa", "zzz"}}},
 	}
-	targets := []discovery_kit_api.Target{{Id: "a", Attributes: original}}
 
 	out := normalizeTargets(targets, "")
 
-	// Same backing slice — no copy was made.
-	assert.Same(t, &targets[0], &out[0], "fast path should return the original slice")
-	// And the map header itself must alias the source, so a write to the returned
-	// map is visible in the source (this is the no-copy contract).
-	out[0].Attributes["touch"] = []string{"x"}
-	_, present := original["touch"]
-	assert.True(t, present, "fast path returns the original map; write is visible in source")
+	// Slice-header identity: same backing array, same len/cap. Not just element-0 aliasing —
+	// a regression like `return targets[:1:1]` would satisfy &targets[0]==&out[0] but break
+	// callers who rely on the full input being returned.
+	require.Equal(t, len(targets), len(out), "fast path must return all targets")
+	assert.Same(t, &targets[0], &out[0], "fast path must share the underlying array")
+	assert.Same(t, &targets[1], &out[1], "every element must alias, not just the first")
+}
+
+// Test_normalizeEnrichmentData_fast_path_no_copy_when_already_sorted mirrors
+// the targets fast-path test for enrichment data — without it, a future
+// regression that inverts enrichmentNeedsNormalize would silently re-introduce
+// per-cycle map allocations for enrichment-data discoveries.
+func Test_normalizeEnrichmentData_fast_path_no_copy_when_already_sorted(t *testing.T) {
+	data := []discovery_kit_api.EnrichmentData{
+		{Id: "a", Attributes: map[string][]string{"single": {"only"}, "k8s.hpa": {"aaa", "bbb"}}},
+		{Id: "b", Attributes: map[string][]string{"k8s.pdb": {"aaa", "zzz"}}},
+	}
+
+	out := normalizeEnrichmentData(data, "")
+
+	require.Equal(t, len(data), len(out))
+	assert.Same(t, &data[0], &out[0], "fast path must share the underlying array")
+	assert.Same(t, &data[1], &out[1])
+}
+
+// Test_normalizeTargets_slow_path_allocates_when_unsorted covers the wiring
+// from normalizeTargets through to normalizeAttributes: with no group and an
+// unsorted multi-valued attribute on at least one target, the SDK MUST
+// allocate a fresh map for that target with the slice sorted on the wire,
+// and the source slice must remain untouched.
+func Test_normalizeTargets_slow_path_allocates_when_unsorted(t *testing.T) {
+	srcAttrs := map[string][]string{"k8s.hpa": {"bbb", "aaa"}} // unsorted
+	targets := []discovery_kit_api.Target{{Id: "a", Attributes: srcAttrs}}
+
+	out := normalizeTargets(targets, "")
+
+	// Wire output must be sorted — this is the SDK's primary contract.
+	assert.Equal(t, []string{"aaa", "bbb"}, out[0].Attributes["k8s.hpa"], "wire output sorted")
+	// Source slice must be untouched.
+	assert.Equal(t, []string{"bbb", "aaa"}, srcAttrs["k8s.hpa"], "source slice not mutated")
+	// Mutating the returned Attributes map must NOT leak into the source — proves the slow path
+	// produced a fresh map.
+	out[0].Attributes["sentinel"] = []string{"x"}
+	_, leaked := srcAttrs["sentinel"]
+	assert.False(t, leaked, "slow path must return a fresh Attributes map")
 }

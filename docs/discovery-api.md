@@ -184,6 +184,7 @@ You can provide a list of attribute definitions. The platform will use these att
 ### References
 
 - [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `AttributeDescriptions`
+- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `AttributeDescriptions`
 
 ## Multi-valued Attribute Values
 
@@ -195,25 +196,22 @@ A discovery that publishes two or more multi-valued attributes whose *positions*
 
 ```json
 {
-  "k8s.hpa.name":         ["hpa-b", "hpa-a"],
-  "k8s.hpa.min-replicas": ["3",     "1"]
+  "k8s.hpa.name":         ["aaa", "bbb"],
+  "k8s.hpa.min-replicas": ["10",  "1"]
 }
 ```
 
-…where the intent is `hpa-b → 3` and `hpa-a → 1`, the SDK sorts each slice independently and the resulting payload reads as `hpa-a → 3, hpa-b → 1` — wrong data, no warning.
+…where the intent is `aaa → 10` and `bbb → 1`, the SDK sorts each slice independently. The `name` array is already sorted so it stays put; the `min-replicas` array becomes `["1", "10"]`. The resulting payload reads as `aaa → 1, bbb → 10` — wrong data, no warning.
 
 **Recommended pattern**: encode paired values into one self-contained string per entry, so each list element is a set member and the sort cannot break the pairing:
 
 ```json
 {
-  "k8s.hpa": ["hpa-a:min=1,max=5", "hpa-b:min=3,max=10"]
+  "k8s.hpa": ["aaa:min=10,max=20", "bbb:min=1,max=5"]
 }
 ```
 
-**Compatibility pattern (if you can't change the wire shape)**: pre-sort the source data by the *primary* attribute before building every parallel slice. As long as every parallel attribute follows the primary's sort order, the SDK's per-attribute sort is a stable no-op. See `extension-kubernetes/extcommon/hpa_pdb_rollup.go` for an example: it sorts the input HPA/PDB slice once at the top of the function and then iterates that sorted source to build all parallel attribute slices.
-
-
-- [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `AttributeDescriptions`
+**Compatibility pattern (if you can't change the wire shape)**: pre-sort the source data by the *primary* attribute before building every parallel slice. As long as every parallel attribute follows the primary's sort order, the SDK's per-attribute sort is a stable no-op. This pattern is fragile — any future contributor who builds a parallel slice from a different iteration order silently corrupts the data — so prefer the self-contained-string encoding unless you cannot change the wire shape. See `extension-kubernetes/extcommon/hpa_pdb_rollup.go` for a working example: it sorts the input HPA/PDB slice once at the top of the function and then iterates that sorted source to build all parallel attribute slices.
 
 ## Target Enrichment Rules
 
