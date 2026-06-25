@@ -184,6 +184,35 @@ You can provide a list of attribute definitions. The platform will use these att
 ### References
 
 - [Go API](https://github.com/steadybit/discovery-kit/tree/main/go/discovery_kit_api): `AttributeDescriptions`
+
+## Multi-valued Attribute Values
+
+Each target attribute value is a JSON array of strings (`map[string][]string` in Go). The platform and the Go SDK both treat the **values within a single attribute as a set, not as an ordered list**: their order carries no semantic meaning. The Go SDK sorts every multi-valued slice before serving so that map-iteration noise from the source data (e.g. Go maps, Kubernetes client-go listers — both randomize) does not look like a change to the platform's target-diff detector. Without that normalization a discovery on unchanged data would re-upload every multi-X target on every cycle, hammering the platform's target store.
+
+### Pitfall: parallel multi-valued attributes
+
+A discovery that publishes two or more multi-valued attributes whose *positions* are meant to pair across attributes will be silently broken by per-attribute sorting. For example, given:
+
+```json
+{
+  "k8s.hpa.name":         ["hpa-b", "hpa-a"],
+  "k8s.hpa.min-replicas": ["3",     "1"]
+}
+```
+
+…where the intent is `hpa-b → 3` and `hpa-a → 1`, the SDK sorts each slice independently and the resulting payload reads as `hpa-a → 3, hpa-b → 1` — wrong data, no warning.
+
+**Recommended pattern**: encode paired values into one self-contained string per entry, so each list element is a set member and the sort cannot break the pairing:
+
+```json
+{
+  "k8s.hpa": ["hpa-a:min=1,max=5", "hpa-b:min=3,max=10"]
+}
+```
+
+**Compatibility pattern (if you can't change the wire shape)**: pre-sort the source data by the *primary* attribute before building every parallel slice. As long as every parallel attribute follows the primary's sort order, the SDK's per-attribute sort is a stable no-op. See `extension-kubernetes/extcommon/hpa_pdb_rollup.go` for an example: it sorts the input HPA/PDB slice once at the top of the function and then iterates that sorted source to build all parallel attribute slices.
+
+
 - [OpenAPI Schema](https://github.com/steadybit/discovery-kit/tree/main/openapi): `AttributeDescriptions`
 
 ## Target Enrichment Rules

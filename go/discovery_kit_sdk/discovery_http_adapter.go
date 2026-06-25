@@ -121,6 +121,9 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 // your source so the per-attribute sort here keeps the pairing aligned, or encode paired values
 // into a single self-contained string per entry.
 func normalizeTargets(targets []discovery_kit_api.Target, group string) []discovery_kit_api.Target {
+	if !targetsNeedNormalize(targets, group) {
+		return targets
+	}
 	out := make([]discovery_kit_api.Target, len(targets))
 	for i, t := range targets {
 		out[i] = t
@@ -130,12 +133,53 @@ func normalizeTargets(targets []discovery_kit_api.Target, group string) []discov
 }
 
 func normalizeEnrichmentData(data []discovery_kit_api.EnrichmentData, group string) []discovery_kit_api.EnrichmentData {
+	if !enrichmentNeedsNormalize(data, group) {
+		return data
+	}
 	out := make([]discovery_kit_api.EnrichmentData, len(data))
 	for i, d := range data {
 		out[i] = d
 		out[i].Attributes = normalizeAttributes(d.Attributes, group)
 	}
 	return out
+}
+
+// targetsNeedNormalize / enrichmentNeedsNormalize keep the no-copy fast path
+// for discoveries with no group configured and whose multi-valued attribute
+// slices already come out sorted. Without this, every serve allocates a fresh
+// map per target whether or not anything would change — measurable cost on
+// large-fan-out discoveries (10k+ targets) polled at tight intervals.
+func targetsNeedNormalize(targets []discovery_kit_api.Target, group string) bool {
+	if group != "" {
+		return true
+	}
+	for _, t := range targets {
+		if attributesNeedNormalize(t.Attributes) {
+			return true
+		}
+	}
+	return false
+}
+
+func enrichmentNeedsNormalize(data []discovery_kit_api.EnrichmentData, group string) bool {
+	if group != "" {
+		return true
+	}
+	for _, d := range data {
+		if attributesNeedNormalize(d.Attributes) {
+			return true
+		}
+	}
+	return false
+}
+
+func attributesNeedNormalize(src map[string][]string) bool {
+	for _, v := range src {
+		if len(v) > 1 && !sort.StringsAreSorted(v) {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeAttributes(src map[string][]string, group string) map[string][]string {
@@ -145,7 +189,7 @@ func normalizeAttributes(src map[string][]string, group string) map[string][]str
 	}
 	dst := make(map[string][]string, len(src)+extra)
 	for k, v := range src {
-		if len(v) > 1 {
+		if len(v) > 1 && !sort.StringsAreSorted(v) {
 			sorted := make([]string, len(v))
 			copy(sorted, v)
 			sort.Strings(sorted)
