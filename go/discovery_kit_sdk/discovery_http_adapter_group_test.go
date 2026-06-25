@@ -14,7 +14,7 @@ func Test_withGroupAttribute_copies_map(t *testing.T) {
 	src := map[string][]string{"k": {"v"}}
 	targets := []discovery_kit_api.Target{{Id: "a", Attributes: src}}
 
-	out := withGroupAttribute(targets, "prod-eu")
+	out := normalizeTargets(targets, "prod-eu")
 
 	assert.Equal(t, []string{"prod-eu"}, out[0].Attributes[groupAttributeKey])
 	assert.Equal(t, []string{"v"}, out[0].Attributes["k"])
@@ -25,11 +25,11 @@ func Test_withGroupAttribute_copies_map(t *testing.T) {
 	assert.NotSame(t, &targets[0].Attributes, &out[0].Attributes)
 }
 
-func Test_withGroupAttributeEnrichment_copies_map(t *testing.T) {
+func Test_normalizeEnrichmentData_copies_map(t *testing.T) {
 	src := map[string][]string{"k": {"v"}}
 	data := []discovery_kit_api.EnrichmentData{{Id: "a", Attributes: src}}
 
-	out := withGroupAttributeEnrichment(data, "prod-eu")
+	out := normalizeEnrichmentData(data, "prod-eu")
 
 	assert.Equal(t, []string{"prod-eu"}, out[0].Attributes[groupAttributeKey])
 	_, present := src[groupAttributeKey]
@@ -52,7 +52,7 @@ func Test_withGroupAttribute_is_concurrent_safe(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 500; j++ {
-				out := withGroupAttribute(shared, "prod-eu")
+				out := normalizeTargets(shared, "prod-eu")
 				for _, tg := range out {
 					for k, v := range tg.Attributes {
 						_ = k
@@ -72,7 +72,26 @@ func Test_withGroupAttribute_is_concurrent_safe(t *testing.T) {
 	wg.Wait()
 }
 
-func Test_copyAttributesWithGroup_handles_nil_source(t *testing.T) {
-	out := copyAttributesWithGroup(nil, "g")
+func Test_normalizeAttributes_handles_nil_source(t *testing.T) {
+	out := normalizeAttributes(nil, "g")
 	assert.Equal(t, []string{"g"}, out[groupAttributeKey])
+}
+
+// Test_normalizeAttributes_sorts_multivalued locks in the fix for the
+// extension-kubernetes platform-DB churn incident: multi-valued attribute slices
+// must come out in a stable order even when the source is in random Go-map order,
+// otherwise the platform's target-diff sees a change every cycle and re-writes.
+func Test_normalizeAttributes_sorts_multivalued(t *testing.T) {
+	src := map[string][]string{
+		"single":  {"only"},
+		"k8s.hpa": {"bbb", "aaa", "ccc"},
+		"k8s.pdb": {"zzz", "aaa"},
+	}
+	out := normalizeAttributes(src, "")
+
+	assert.Equal(t, []string{"only"}, out["single"], "single-valued slice untouched")
+	assert.Equal(t, []string{"aaa", "bbb", "ccc"}, out["k8s.hpa"], "multi-valued slice sorted")
+	assert.Equal(t, []string{"aaa", "zzz"}, out["k8s.pdb"], "multi-valued slice sorted")
+	// Source must not be mutated.
+	assert.Equal(t, []string{"bbb", "aaa", "ccc"}, src["k8s.hpa"], "source slice must not be mutated")
 }
