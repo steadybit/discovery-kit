@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: a panicking discovery no longer publishes a successful empty result — the recovered panic is now surfaced as an error, so the cache records a failed discovery (and keeps returning an error) instead of an empty target/enrichment set with an advanced ETag
+
 ## 1.3.5
 
 - fix: restore universal application of the discovery group attribute. v1.3.4 moved injection into the cache supplier chain, which skipped discoveries registered without `NewCachedTargetDiscovery` / `NewCachedEnrichmentDataDiscovery` (and any path going through `WithUpdate`). Injection now happens again in the HTTP discovery adapter, but each request builds a fresh copy of every target's attributes before adding `steadybit.group`. The discovery's underlying maps are never mutated, so this is safe under any level of concurrency and works for cached, non-cached, and incrementally-updated discoveries alike.

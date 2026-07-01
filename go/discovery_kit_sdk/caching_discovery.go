@@ -5,6 +5,7 @@ package discovery_kit_sdk
 import (
 	"context"
 	"errors"
+	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -91,6 +92,10 @@ func recoverable[T any](fn discoverFn[T]) discoverFn[T] {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Error().Msgf("discovery panic: %v\n %s", err, string(debug.Stack()))
+				// Surface the panic as an error so the cache records a failed discovery
+				// instead of a successful empty result (which would publish an empty
+				// target/enrichment set and advance the ETag as if it were legitimate).
+				e = fmt.Errorf("discovery panicked: %v", err)
 			}
 		}()
 		return fn(ctx)
