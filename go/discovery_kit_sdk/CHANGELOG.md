@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.6
 
 - fix: a panicking discovery no longer publishes a successful empty result — the recovered panic is now surfaced as an error, so the cache records a failed discovery (and keeps returning an error) instead of an empty target/enrichment set with an advanced ETag
 
