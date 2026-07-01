@@ -15,6 +15,17 @@ import (
 	"time"
 )
 
+func Test_recoverable_turns_panic_into_error(t *testing.T) {
+	fn := recoverable[discovery_kit_api.Target](func(context.Context) ([]discovery_kit_api.Target, error) {
+		panic("boom")
+	})
+	data, err := fn(context.Background())
+	assert.Nil(t, data)
+	// Must be an error, not a (nil, nil) "successful empty discovery" that would publish
+	// an empty target set and advance the ETag.
+	assert.Error(t, err)
+}
+
 func Test_target_caching(t *testing.T) {
 	ctx := context.Background()
 
