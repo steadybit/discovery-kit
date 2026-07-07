@@ -25,6 +25,6 @@ require (
 	github.com/oasdiff/yaml3 v0.0.13 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
