@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"slices"
+	"sync"
 	"testing"
 	"time"
 )
@@ -316,4 +317,28 @@ func Test_target_string_interning_concurrent_modification(t *testing.T) {
 		cached.Refresh(ctx)
 		_, _ = cached.DiscoverTargets(ctx)
 	})
+}
+
+// Test_target_update_concurrent_is_race_free reproduces the data race where
+// Update read the previous slice while building the new one without holding the
+// lock, racing a concurrent Update writing it. It fails under `go test -race`
+// unless the read is synchronized.
+func Test_target_update_concurrent_is_race_free(t *testing.T) {
+	cached := NewCachedTargetDiscovery(newMockTargetDiscovery())
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			cached.Update(func(current []discovery_kit_api.Target) ([]discovery_kit_api.Target, error) {
+				return append(slices.Clone(current), discovery_kit_api.Target{Id: "target", TargetType: "example"}), nil
+			})
+		}()
+	}
+	wg.Wait()
+
+	result, err := cached.DiscoverTargets(context.Background())
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
 }
