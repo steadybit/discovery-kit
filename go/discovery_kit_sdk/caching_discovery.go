@@ -123,7 +123,13 @@ type UpdateFn[U any] func(U) (U, error)
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 	lastModified := time.Now()
 	log.Trace().Msg("updating discovery")
-	data, err := fn(c.data)
+
+	c.mu.RLock()
+	current := c.data
+	c.mu.RUnlock()
+
+	data, err := fn(current)
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastModified = lastModified

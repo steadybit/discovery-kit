@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: data race in `CachedDiscovery.Update` — the previous target/enrichment slice was read while building the new one without holding the lock, racing a concurrent `Update` writing it. It surfaced as a `-race` test failure when a discovery registered with both `WithRefreshTargetsNow` and a short `WithRefreshTargetsInterval` ran its two initial refreshes concurrently. The prior slice is now snapshotted under the read lock before the supplier runs (the supplier still runs unlocked, so `Get` stays non-blocking).
+
 ## 1.3.6
 
 - fix: a panicking discovery no longer publishes a successful empty result — the recovered panic is now surfaced as an error, so the cache records a failed discovery (and keeps returning an error) instead of an empty target/enrichment set with an advanced ETag
