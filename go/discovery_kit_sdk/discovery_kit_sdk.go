@@ -56,10 +56,10 @@ type p interface {
 }
 
 type Unwrapper interface {
-	Unwrap() interface{}
+	Unwrap() any
 }
 
-func Register(o interface{}) {
+func Register(o any) {
 	matched := false
 	matched = registerDiscovery(o) || matched
 	matched = registerTargetDescriber(o) || matched
@@ -71,7 +71,7 @@ func Register(o interface{}) {
 	}
 }
 
-func registerDiscovery(o interface{}) bool {
+func registerDiscovery(o any) bool {
 	if d, ok := o.(Discovery); ok {
 		adapter := newDiscoveryHttpAdapter(d)
 		registeredDiscoveries[adapter.description.Id] = d
@@ -84,7 +84,7 @@ func registerDiscovery(o interface{}) bool {
 	return false
 }
 
-func registerTargetDescriber(o interface{}) bool {
+func registerTargetDescriber(o any) bool {
 	if d, ok := o.(TargetDescriber); ok {
 		id := d.DescribeTarget().Id
 		registeredTargetDescriber[id] = d
@@ -97,7 +97,7 @@ func registerTargetDescriber(o interface{}) bool {
 	return false
 }
 
-func registerAttributeDescriber(o interface{}) bool {
+func registerAttributeDescriber(o any) bool {
 	if d, ok := o.(AttributeDescriber); ok {
 		if len(registeredAttributeDescriber) == 0 {
 			exthttp.RegisterHttpHandler("/discovery/attributes", exthttp.GetterAsHandler(describeAttributes))
@@ -111,7 +111,7 @@ func registerAttributeDescriber(o interface{}) bool {
 	return false
 }
 
-func registerEnrichmentRuleContributor(o interface{}) bool {
+func registerEnrichmentRuleContributor(o any) bool {
 	if d, ok := o.(EnrichmentRulesDescriber); ok {
 		for _, rule := range d.DescribeEnrichmentRules() {
 			ruleCopy := rule // copy the value, otherwise the closure will always point to the last value of the slice

@@ -102,8 +102,7 @@ func Test_target_caching_error(t *testing.T) {
 }
 
 func Test_target_caching_should_recover(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockTargetDiscovery()
 	cached := NewCachedTargetDiscovery(discovery, WithRefreshTargetsInterval(ctx, 20*time.Millisecond))
@@ -186,8 +185,7 @@ func Test_target_cache_trigger(t *testing.T) {
 }
 
 func Test_target_cache_trigger_throttle(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockTargetDiscovery()
 	ch := make(chan struct{})
@@ -208,8 +206,7 @@ func Test_target_cache_trigger_throttle(t *testing.T) {
 }
 
 func Test_target_cache_update(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockTargetDiscovery()
 	ch := make(chan string)
@@ -327,14 +324,12 @@ func Test_target_update_concurrent_is_race_free(t *testing.T) {
 	cached := NewCachedTargetDiscovery(newMockTargetDiscovery())
 
 	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 50 {
+		wg.Go(func() {
 			cached.Update(func(current []discovery_kit_api.Target) ([]discovery_kit_api.Target, error) {
 				return append(slices.Clone(current), discovery_kit_api.Target{Id: "target", TargetType: "example"}), nil
 			})
-		}()
+		})
 	}
 	wg.Wait()
 

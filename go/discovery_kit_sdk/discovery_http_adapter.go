@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,7 +16,6 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-kit/extutil"
 )
 
 const (
@@ -43,7 +43,7 @@ func getDescriptionWithDefaults(discovery Discovery) discovery_kit_api.Discovery
 		description.Discover.Method = discovery_kit_api.GET
 	}
 	if description.Discover.CallInterval == nil {
-		description.Discover.CallInterval = extutil.Ptr(defaultCallInterval)
+		description.Discover.CallInterval = new(defaultCallInterval)
 	}
 	return description
 }
@@ -86,7 +86,7 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		if group != "" {
 			targets = withGroupAttribute(targets, group)
 		}
-		body.Targets = extutil.Ptr(targets)
+		body.Targets = new(targets)
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
 		data, err := e.DiscoverEnrichmentData(newCtx)
@@ -97,7 +97,7 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		if group != "" {
 			data = withGroupAttributeEnrichment(data, group)
 		}
-		body.EnrichmentData = extutil.Ptr(data)
+		body.EnrichmentData = new(data)
 	}
 	if allErrs != nil {
 		exthttp.WriteError(w, extension_kit.ToError("Discovery Failed", allErrs))
@@ -131,9 +131,7 @@ func withGroupAttributeEnrichment(data []discovery_kit_api.EnrichmentData, group
 
 func copyAttributesWithGroup(src map[string][]string, group string) map[string][]string {
 	dst := make(map[string][]string, len(src)+1)
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	dst[groupAttributeKey] = []string{group}
 	return dst
 }

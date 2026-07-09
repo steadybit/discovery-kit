@@ -89,8 +89,7 @@ func Test_enrichmentData_caching_error(t *testing.T) {
 }
 
 func Test_enrichmentData_caching_should_recover(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockEnrichmentDataDiscovery()
 	cached := NewCachedEnrichmentDataDiscovery(discovery, WithRefreshEnrichmentDataInterval(ctx, 20*time.Millisecond))
@@ -172,8 +171,7 @@ func Test_enrichmentData_cache_trigger(t *testing.T) {
 }
 
 func Test_enrichmentData_cache_trigger_throttle(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockEnrichmentDataDiscovery()
 	ch := make(chan struct{})
@@ -194,8 +192,7 @@ func Test_enrichmentData_cache_trigger_throttle(t *testing.T) {
 }
 
 func Test_enrichmentData_cache_update(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	discovery := newMockEnrichmentDataDiscovery()
 	ch := make(chan string)

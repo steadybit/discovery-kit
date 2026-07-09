@@ -114,7 +114,7 @@ func (c *CachedDiscovery[T]) LastModified() time.Time {
 	return c.lastModified
 }
 
-func (c *CachedDiscovery[T]) Unwrap() interface{} {
+func (c *CachedDiscovery[T]) Unwrap() any {
 	return c.Discovery
 }
 
@@ -196,7 +196,7 @@ func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, throttle
 		fn := m.Refresh
 
 		if throttlePeriod > 0 {
-			debounced, _ := debounce.ThrottleWithCustomSignature(func(args ...interface{}) interface{} {
+			debounced, _ := debounce.ThrottleWithCustomSignature(func(args ...any) any {
 				m.Refresh(args[0].(context.Context))
 				return nil
 			}, throttlePeriod)

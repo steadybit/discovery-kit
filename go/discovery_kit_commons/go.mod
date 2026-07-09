@@ -1,8 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_commons
 
-go 1.24.0
-
-toolchain go1.25.4
+go 1.26.5
 
 require github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
 
