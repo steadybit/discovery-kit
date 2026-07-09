@@ -6,7 +6,6 @@ package discovery_kit_sdk
 import (
 	"context"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 import "github.com/stretchr/testify/mock"
@@ -52,7 +51,7 @@ func newMockTargetDiscovery() *MockTargetDiscovery {
 		Id: "example",
 	})
 	m.On("DescribeTarget").Return(discovery_kit_api.TargetDescription{
-		Category: extutil.Ptr("examples"),
+		Category: new("examples"),
 		Id:       "example",
 		Label:    discovery_kit_api.PluralLabel{One: "Example Target", Other: "Example Targets"},
 		Version:  "unknown",

@@ -161,7 +161,7 @@ func (c *clientImpl) DescribeEnrichmentRule(ref discovery_kit_api.DescribingEndp
 	return enrichmentRule, err
 }
 
-func (c *clientImpl) executeAndValidate(ref discovery_kit_api.DescribingEndpointReference, result interface{}, schemaName string) error {
+func (c *clientImpl) executeAndValidate(ref discovery_kit_api.DescribingEndpointReference, result any, schemaName string) error {
 	method, path := getMethodAndPath(ref)
 	res, err := c.client.R().SetResult(result).Execute(method, path)
 	if err != nil {
@@ -184,7 +184,7 @@ func (c *clientImpl) validateResponseBody(name string, body []byte) error {
 		return fmt.Errorf("component schema '%s' not found", name)
 	}
 
-	var decoded interface{}
+	var decoded any
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.UseNumber()
 	err := dec.Decode(&decoded)

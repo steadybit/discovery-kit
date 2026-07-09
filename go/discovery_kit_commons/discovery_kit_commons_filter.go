@@ -34,9 +34,9 @@ func applyExcludesToAttributes(attributes map[string][]string, denyList []string
 	for key := range attributes {
 		resultAttributes[key] = attributes[key]
 		for _, denyListEntry := range denyList {
-			if strings.HasSuffix(denyListEntry, "*") {
+			if before, ok := strings.CutSuffix(denyListEntry, "*"); ok {
 				// if the deny list entry ends with a wildcard, check if the key starts with the deny list entry
-				if strings.HasPrefix(key, strings.TrimSuffix(denyListEntry, "*")) {
+				if strings.HasPrefix(key, before) {
 					delete(resultAttributes, key)
 				}
 			} else {

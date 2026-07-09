@@ -46,7 +46,7 @@ func TestDiscoveryDescription(t *testing.T) {
 		Discover: DescribingEndpointReferenceWithCallInterval{
 			Method:       "GET",
 			Path:         "/",
-			CallInterval: Ptr("5m"),
+			CallInterval: new("5m"),
 		},
 		Id: "42",
 	}
@@ -105,8 +105,8 @@ func TestDiscoveryData(t *testing.T) {
 
 func TestTargetDescription(t *testing.T) {
 	v := TargetDescription{
-		Category: Ptr("basic"),
-		Icon:     Ptr("data:..."),
+		Category: new("basic"),
+		Icon:     new("data:..."),
 		Id:       "id",
 		Version:  "1.0.0",
 		Label: PluralLabel{
@@ -117,7 +117,7 @@ func TestTargetDescription(t *testing.T) {
 			Columns: []Column{
 				{
 					Attribute:          "attr",
-					FallbackAttributes: Ptr([]string{"a", "b"}),
+					FallbackAttributes: new([]string{"a", "b"}),
 				},
 			},
 			OrderBy: []OrderBy{
@@ -133,10 +133,10 @@ func TestTargetDescription(t *testing.T) {
 
 func TestDiscoveryKitError(t *testing.T) {
 	v := DiscoveryKitError{
-		Detail:   Ptr("d"),
-		Instance: Ptr("i"),
+		Detail:   new("d"),
+		Instance: new("i"),
 		Title:    "t",
-		Type:     Ptr("t"),
+		Type:     new("t"),
 	}
 	markAsUsed(t, v)
 }
