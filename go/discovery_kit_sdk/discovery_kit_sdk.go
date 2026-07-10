@@ -69,6 +69,8 @@ func Register(o any) {
 	if !matched {
 		panic(fmt.Sprintf("unknown discovery type: %T", o))
 	}
+
+	exthttp.BumpRevision()
 }
 
 func registerDiscovery(o any) bool {
@@ -214,4 +216,5 @@ func ClearRegisteredDiscoveries() {
 	registeredTargetDescriber = make(map[string]TargetDescriber)
 	registeredAttributeDescriber = make([]AttributeDescriber, 0)
 	registeredEnrichmentRulesContributions = make(map[string]discovery_kit_api.TargetEnrichmentRule)
+	exthttp.BumpRevision()
 }
