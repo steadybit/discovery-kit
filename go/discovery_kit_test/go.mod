@@ -3,7 +3,7 @@ module github.com/steadybit/discovery-kit/go/discovery_kit_test
 go 1.26.5
 
 require (
-	github.com/getkin/kin-openapi v0.140.0
+	github.com/getkin/kin-openapi v0.142.0
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
@@ -19,8 +19,8 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/oapi-codegen/runtime v1.1.2 // indirect
-	github.com/oasdiff/yaml v0.1.0 // indirect
-	github.com/oasdiff/yaml3 v0.0.13 // indirect
+	github.com/oasdiff/yaml v0.1.1 // indirect
+	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	golang.org/x/net v0.55.0 // indirect
