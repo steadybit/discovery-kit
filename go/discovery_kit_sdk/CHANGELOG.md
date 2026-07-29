@@ -1,8 +1,16 @@
 # Changelog
 
-## Unreleased
+## 1.4.1
 
+- Requires `extension-kit` v1.11.1 (up from v1.11.0), for the `extquery` package the filter below is built on.
+- feat: operators can exclude targets from discovery inside the extension, using the same query language as environments and blast radii. `STEADYBIT_EXTENSION_DISCOVERY_EXCLUDE_QUERY` drops matching targets and `STEADYBIT_EXTENSION_DISCOVERY_INCLUDE_QUERY` keeps only matching ones; both accept a `_FILE` suffix to read the query from a file. A query applies to every discovery of the extension — narrow it to one with `target.type="..."` in the query itself. Filtered targets never leave the extension, so they cost nothing to transfer, ingest or store. A malformed query stops the extension at start up rather than being ignored. See the README.
+
+## 1.4.0
+
+- **Requires Go 1.26.5** (up from 1.25.0) and `extension-kit` v1.11.0 (up from v1.10.4). Extensions must raise their own `go` directive and toolchain to build against this version.
+- feat: `Register` and `ClearRegisteredDiscoveries` now call `exthttp.BumpRevision()`, so the extension index ETag reflects the set of registered discoveries, target describers, attribute describers and enrichment rules. The agent's index-response cache invalidates on registration changes without needing a process restart. The Discover endpoint's own ETag is unchanged.
 - fix: data race in `CachedDiscovery.Update` — the previous target/enrichment slice was read while building the new one without holding the lock, racing a concurrent `Update` writing it. It surfaced as a `-race` test failure when a discovery registered with both `WithRefreshTargetsNow` and a short `WithRefreshTargetsInterval` ran its two initial refreshes concurrently. The prior slice is now snapshotted under the read lock before the supplier runs (the supplier still runs unlocked, so `Get` stays non-blocking).
+- chore(deps): transitive bumps of `klauspost/compress`, `golang.org/x/net`, `golang.org/x/sys` and `golang.org/x/text`
 
 ## 1.3.6
 

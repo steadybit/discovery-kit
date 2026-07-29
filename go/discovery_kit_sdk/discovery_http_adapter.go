@@ -30,6 +30,9 @@ func newDiscoveryHttpAdapter(discovery Discovery) *discoveryHttpAdapter {
 		description: description,
 		discovery:   discovery,
 		rootPath:    fmt.Sprintf("/%s/discovery", description.Id),
+		// Resolved once, at registration: parsing is the expensive part, and a malformed query
+		// should stop the extension at start up rather than on the first discovery call.
+		filter: newDiscoveryFilter(description.Id),
 	}
 	return adapter
 }
@@ -52,6 +55,7 @@ type discoveryHttpAdapter struct {
 	description discovery_kit_api.DiscoveryDescription
 	discovery   Discovery
 	rootPath    string
+	filter      *discoveryFilter
 }
 
 func (a discoveryHttpAdapter) registerHandlers() {
@@ -86,6 +90,8 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		if group != "" {
 			targets = withGroupAttribute(targets, group)
 		}
+		// After the group attribute, so a filter can select on steadybit.group.
+		targets = a.filter.retainTargets(targets)
 		body.Targets = new(targets)
 	}
 	if e, ok := a.discovery.(EnrichmentDataDiscovery); ok {
@@ -97,6 +103,7 @@ func (a discoveryHttpAdapter) handleDiscover(w http.ResponseWriter, r *http.Requ
 		if group != "" {
 			data = withGroupAttributeEnrichment(data, group)
 		}
+		data = a.filter.retainEnrichmentData(data)
 		body.EnrichmentData = new(data)
 	}
 	if allErrs != nil {

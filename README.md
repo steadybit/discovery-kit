@@ -13,4 +13,5 @@ We recommend that you read the following documentation to get started with Disco
 - [Terminology](/docs/terminology.md)
 - [Target Enrichment](/docs/target-enrichment.md)
 - [Reserved Target Attributes](/docs/reserved-target-attributes.md)
+- [Target Filtering](/docs/target-filtering.md)
 - [Extension-Scaffold](https://github.com/steadybit/extension-scaffold/blob/main/README.md)

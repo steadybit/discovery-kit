@@ -50,5 +50,7 @@ You can decouple this by decorating your discovery using the `NewCachedTargetDis
 
 You have various options to refresh periodically once on the trigger. Also, it will help recover from any panic upon discovery.
 
+## Filtering targets out of discovery
 
-
+Operators can exclude targets with a query, configured by environment variable. Nothing is
+required of the discovery implementation — see [Target Filtering](/docs/target-filtering.md).
