@@ -81,9 +81,10 @@ type.
 - **A malformed query stops the extension at start up.** An exclusion an operator believes is in
   force but which silently does nothing is worse than a failure to start, so the query is parsed
   once at start up and a parse error is fatal, naming the variable, the position and the query.
-- **The active filter is logged at start up** (`INFO`), and the number of dropped records per
-  discovery at `DEBUG`. Without that, a missing target is undebuggable — the extension simply never
-  mentions it.
+- **The active filter is logged once at start up** (`INFO`). The number of records it drops is
+  logged per discovery at `TRACE` — it repeats on every discovery request, so it is off unless you
+  go looking for it. Turn it on with `STEADYBIT_LOG_LEVEL=trace` when a target is missing and you
+  need to know whether the filter is what removed it.
 - **An empty or unset query is not a filter.** It does not mean "match nothing".
 - **Variable (`{{...}}`) and template-placeholder (`[[...]]`) markers are rejected.** The platform
   resolves those against experiment and environment state that an extension cannot see.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -21,14 +22,19 @@ const (
 	labelAttribute      = "steadybit.label"
 )
 
+// filterLogOnce keeps the "filter active" line to one occurrence: newDiscoveryFilter runs once per
+// registered discovery, and the filter is identical for all of them.
+var filterLogOnce sync.Once
+
 // discoveryFilter drops targets an operator does not want reported, using the same query language
 // the platform uses for environments and blast radii. Filtering here rather than in the platform
 // means the targets never reach the agent at all: no transfer, no ingest, no rows.
 //
 // A nil filter keeps everything, which is the common case.
 type discoveryFilter struct {
-	include extquery.Predicate
-	exclude extquery.Predicate
+	discoveryId string
+	include     extquery.Predicate
+	exclude     extquery.Predicate
 }
 
 // newDiscoveryFilter resolves the filter, which applies to every discovery of the extension. Both
@@ -48,13 +54,16 @@ func newDiscoveryFilter(discoveryId string) *discoveryFilter {
 		return nil
 	}
 
-	log.Info().
-		Str("discoveryId", discoveryId).
-		Str("include", predicateString(include)).
-		Str("exclude", predicateString(exclude)).
-		Msg("Discovery filter active. Targets not matching include, or matching exclude, are not reported.")
+	// Called once per registered discovery, but the filter is the same for all of them — an
+	// extension with ten discoveries would otherwise log ten identical lines at start up.
+	filterLogOnce.Do(func() {
+		log.Info().
+			Str("include", predicateString(include)).
+			Str("exclude", predicateString(exclude)).
+			Msg("Discovery filter active. Targets not matching include, or matching exclude, are not reported.")
+	})
 
-	return &discoveryFilter{include: include, exclude: exclude}
+	return &discoveryFilter{discoveryId: discoveryId, include: include, exclude: exclude}
 }
 
 func (f *discoveryFilter) retainTargets(targets []discovery_kit_api.Target) []discovery_kit_api.Target {
@@ -67,7 +76,7 @@ func (f *discoveryFilter) retainTargets(targets []discovery_kit_api.Target) []di
 			retained = append(retained, target)
 		}
 	}
-	logDropped(len(targets), len(retained), "targets")
+	f.logDropped(len(targets), len(retained), "targets")
 	return retained
 }
 
@@ -81,7 +90,7 @@ func (f *discoveryFilter) retainEnrichmentData(data []discovery_kit_api.Enrichme
 			retained = append(retained, d)
 		}
 	}
-	logDropped(len(data), len(retained), "enrichment data records")
+	f.logDropped(len(data), len(retained), "enrichment data records")
 	return retained
 }
 
@@ -157,10 +166,16 @@ func predicateString(predicate extquery.Predicate) string {
 	return predicate.String()
 }
 
-// logDropped reports how many records the filter removed. Without this a missing target is
+// logDropped reports how many records the filter removed. Without it a missing target is
 // undebuggable — the extension simply never mentions it.
-func logDropped(before, after int, what string) {
+//
+// Trace, not Debug: this runs on every discovery request, and only cached discoveries get an ETag
+// short-circuit, so for the rest it repeats at the call interval forever with the same numbers.
+// That matches CachedDiscovery, which traces the per-cycle line and debugs the outcome.
+func (f *discoveryFilter) logDropped(before, after int, what string) {
 	if dropped := before - after; dropped > 0 {
-		log.Debug().Msgf("Discovery filter dropped %d of %d %s.", dropped, before, what)
+		log.Trace().
+			Str("discoveryId", f.discoveryId).
+			Msgf("Discovery filter dropped %d of %d %s.", dropped, before, what)
 	}
 }
