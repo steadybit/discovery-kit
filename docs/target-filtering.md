@@ -44,6 +44,71 @@ extension that hosts several, say so in the query rather than looking for a seco
 STEADYBIT_EXTENSION_DISCOVERY_EXCLUDE_QUERY='target.type="com.steadybit.extension_kubernetes.kubernetes-pod" AND k8s.namespace="kube-system"'
 ```
 
+## Configuring through Helm
+
+Every official extension chart depends on the `extensionlib` library chart, which renders the two
+environment variables from a `discovery` block — so the same two values work in all of them:
+
+| Helm value               | Meaning                                          |
+|--------------------------|--------------------------------------------------|
+| `discovery.excludeQuery` | targets matching the query are **not** reported   |
+| `discovery.includeQuery` | **only** targets matching the query are reported  |
+
+```yaml
+discovery:
+  excludeQuery: 'k8s.namespace IN (kube-system, istio-system)'
+```
+
+Requires `extensionlib` 1.5.3 or later, and an extension built against `discovery_kit_sdk` v1.4.1 or
+later. On an older extension the values still render, and the environment variables are ignored.
+
+### Quoting the query in YAML
+
+This is the part that bites. Queries routinely contain characters that mean something to YAML, so
+**an unquoted query is a trap**. Three ways it goes wrong:
+
+```yaml
+discovery:
+  # helm fails: ": " starts a mapping
+  excludeQuery: container.image~"docker.io: mirror"
+
+  # helm fails: a leading double quote makes it a quoted scalar
+  excludeQuery: "k8s.label.app.kubernetes.io/name"="gateway"
+
+  # SILENTLY TRUNCATED to 'k8s.label.note~"a' — " #" starts a YAML comment
+  excludeQuery: k8s.label.note~"a #tag"
+```
+
+The last is the dangerous one: Helm reports nothing and the extension receives a different query
+from the one you wrote. The leading-quote case is not exotic either — the query language *requires*
+quoting attribute keys containing a `/`, which covers every `k8s.label.app.kubernetes.io/name`-style
+key.
+
+**Prefer a literal block scalar** (`|-`). It has no escaping rules at all, so double quotes, colons,
+`#` and apostrophes are all taken verbatim:
+
+```yaml
+discovery:
+  excludeQuery: |-
+    "k8s.label.app.kubernetes.io/name"="gateway" AND container.image~"docker.io: mirror #tag"
+```
+
+For short queries single quotes are enough, and beat double quotes because a query is usually full
+of double quotes already — but an apostrophe inside then has to be doubled (`'a~"it''s"'`), which is
+another reason to reach for the block scalar:
+
+```yaml
+discovery:
+  excludeQuery: 'container.image~"docker.io: mirror"'
+```
+
+On the command line, `--set` applies its own escaping on top of the shell's and gets unreadable
+fast. Use a values file, or `--set-file`, which bypasses YAML quoting entirely:
+
+```shell
+helm upgrade ... --set-file discovery.excludeQuery=./exclude.query
+```
+
 ## Writing the query
 
 The syntax is Steadybit's target query language — the same one the target explorer and environment
