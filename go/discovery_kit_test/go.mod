@@ -3,7 +3,7 @@ module github.com/steadybit/discovery-kit/go/discovery_kit_test
 go 1.26.5
 
 require (
-	github.com/getkin/kin-openapi v0.142.0
+	github.com/getkin/kin-openapi v0.145.0
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/jarcoal/httpmock v1.4.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
