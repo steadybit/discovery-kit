@@ -30,8 +30,8 @@ github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfV
 github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d/go.mod h1:2PavIy+JPciBPrBUjwbNvtwB6RQlve+hkpll6QSNmOE=
 github.com/kelseyhightower/envconfig v1.4.0 h1:Im6hONhd3pLkfDFsbRgu68RDNkGF1r3dvMUtDTo2cv8=
 github.com/kelseyhightower/envconfig v1.4.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
-github.com/klauspost/compress v1.19.1 h1:VsB4HPswih7mmZ8WleSFQ75c/Ui1M4trX5oAsJnhSlk=
-github.com/klauspost/compress v1.19.1/go.mod h1:cwPg85FWrGar70rWktvGQj8/hthj3wpl0PGDogxkrSQ=
+github.com/klauspost/compress v1.19.2 h1:hMRETovs/pu/dVWN7zIT1PGG8t509MwT6bO7XSi26R8=
+github.com/klauspost/compress v1.19.2/go.mod h1:cwPg85FWrGar70rWktvGQj8/hthj3wpl0PGDogxkrSQ=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
@@ -69,8 +69,8 @@ github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1 h1:CBMPzLfAF0huCO
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1/go.mod h1:1Lq/Y33uTb6ezFg7kYy1hJjhpCfLl//qD0p4RqLAMZw=
 github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.1 h1:CabRtfE70gt/4H/TgL/TRm54OkxWKbmPhTX2qEhzKZ4=
 github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.1/go.mod h1:PPJh5gSdVRKG/0qJCGJK5XnGxXat/v6UT8/2ilIbbX8=
-github.com/steadybit/extension-kit v1.11.1 h1:edL52gyi8G400z/fpc1wuYmmGLlFUJk83TJePvs0x7Q=
-github.com/steadybit/extension-kit v1.11.1/go.mod h1:j6YHBLamSzEi8e85U/ZosBJG7nnnfiHwtHeQa6+9smk=
+github.com/steadybit/extension-kit v1.11.2 h1:UFB82q0H/l4Q1RO1yiEgVuAO+XETLa/Yn168idkVFyI=
+github.com/steadybit/extension-kit v1.11.2/go.mod h1:jxbQy5zKhmnsSXtkyElOYJ5FEzsO5h+kAmN/vLql1fw=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.5.3 h1:jmXUvGomnU1o3W/V5h2VEradbpJDwGrzugQQvL0POH4=
 github.com/stretchr/objx v0.5.3/go.mod h1:rDQraq+vQZU7Fde9LOZLr8Tax6zZvy4kuNKF+QYS+U0=

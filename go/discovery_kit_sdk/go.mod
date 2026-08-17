@@ -1,6 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_sdk
 
-go 1.26.5
+go 1.26
 
 require (
 	github.com/go-resty/resty/v2 v2.17.2
@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.1
-	github.com/steadybit/extension-kit v1.11.1
+	github.com/steadybit/extension-kit v1.11.2
 	github.com/stretchr/testify v1.11.1
 	github.com/zmwangx/debounce v1.0.0
 )
@@ -22,7 +22,7 @@ require (
 	github.com/go-openapi/swag/jsonname v0.25.5 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/klauspost/compress v1.19.1 // indirect
+	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/oapi-codegen/runtime v1.1.2 // indirect
