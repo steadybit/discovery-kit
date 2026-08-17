@@ -1,6 +1,6 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_commons
 
-go 1.26.5
+go 1.26
 
 require github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
 
