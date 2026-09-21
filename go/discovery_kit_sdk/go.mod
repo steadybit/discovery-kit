@@ -7,7 +7,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/rs/zerolog v1.35.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
-	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.1
+	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.2
 	github.com/steadybit/extension-kit v1.12.0
 	github.com/stretchr/testify v1.12.1
 	github.com/zmwangx/debounce v1.0.0
@@ -18,7 +18,7 @@ require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
-	github.com/getkin/kin-openapi v0.144.0 // indirect
+	github.com/getkin/kin-openapi v0.146.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.22.5 // indirect
