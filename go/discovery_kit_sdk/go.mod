@@ -6,7 +6,7 @@ require (
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/rs/zerolog v1.35.1
-	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
+	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.2
 	github.com/steadybit/extension-kit v1.12.0
 	github.com/stretchr/testify v1.12.1
@@ -28,7 +28,7 @@ require (
 	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/oapi-codegen/runtime v1.1.2 // indirect
+	github.com/oapi-codegen/runtime v1.6.0 // indirect
 	github.com/oasdiff/yaml v0.1.1 // indirect
 	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/rs/xid v1.6.0 // indirect
