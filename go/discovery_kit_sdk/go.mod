@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.2
-	github.com/steadybit/extension-kit v1.12.0
+	github.com/steadybit/extension-kit v1.12.1
 	github.com/stretchr/testify v1.12.1
 	github.com/zmwangx/debounce v1.0.0
 )
