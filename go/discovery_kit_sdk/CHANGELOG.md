@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- feat: `WithKeepTargetsOnError` / `WithKeepEnrichmentDataOnError` / `WithKeepDataOnError` keep serving the last successful result for up to `maxAge` when a refresh fails.
+- feat: `WithRetryTargetsOnError` / `WithRetryEnrichmentDataOnError` / `WithRetryOnError` retry a failed refresh with exponential backoff.
+- fix: background refreshes start only after all options are applied, so the first refresh uses every option regardless of their order (e.g. `WithRefreshTargetsNow` before `WithTargetsRefreshTimeout`).
+
 ## 1.4.1
 
 - Requires `extension-kit` v1.11.1 (up from v1.11.0), for the `extquery` package the filter below is built on.

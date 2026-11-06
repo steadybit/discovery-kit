@@ -50,6 +50,25 @@ You can decouple this by decorating your discovery using the `NewCachedTargetDis
 
 You have various options to refresh periodically once on the trigger. Also, it will help recover from any panic upon discovery.
 
+By default, a failed refresh replaces the cached data with the error until a refresh succeeds. For long refresh intervals, two
+opt-in options help:
+
+- `WithKeepTargetsOnError(maxAge)` keeps serving the last successful result while it is at most `maxAge` old.
+- `WithRetryTargetsOnError(ctx, minDelay, maxDelay)` retries after `minDelay`, doubling the delay until it would exceed `maxDelay`.
+  Pass the refresh interval as `maxDelay`.
+
+```go
+	ctx := context.Background()
+	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
+		discovery_kit_sdk.WithRefreshTargetsNow(),
+		discovery_kit_sdk.WithRefreshTargetsInterval(ctx, 3*time.Hour),
+		discovery_kit_sdk.WithKeepTargetsOnError(24*time.Hour),
+		discovery_kit_sdk.WithRetryTargetsOnError(ctx, 5*time.Minute, 3*time.Hour),
+	)
+```
+
+Both have `EnrichmentData` and generic variants.
+
 ## Filtering targets out of discovery
 
 Operators can exclude targets with a query, configured by environment variable. Nothing is

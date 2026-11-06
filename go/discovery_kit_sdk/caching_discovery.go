@@ -11,6 +11,7 @@ import (
 	"time"
 	"unique"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
@@ -27,6 +28,10 @@ type CachedDiscovery[T any] struct {
 	supplier     discoverFn[T]
 	data         []T
 	err          error
+	lastSuccess  time.Time
+	keepDataFor  time.Duration
+	retry        *retryOnError
+	start        []func()
 }
 
 type CachedDiscoveryOpt[T any] func(m *CachedDiscovery[T])
@@ -58,10 +63,24 @@ func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[disc
 			data:      make([]discovery_kit_api.Target, 0),
 		},
 	}
-	for _, opt := range opts {
-		opt(&c.CachedDiscovery)
-	}
+	c.apply(opts)
 	return c
+}
+
+// apply starts the background refreshes only after all options are applied, so the first refresh
+// already uses every option regardless of their order.
+func (c *CachedDiscovery[T]) apply(opts []CachedDiscoveryOpt[T]) {
+	for _, opt := range opts {
+		opt(c)
+	}
+	for _, start := range c.start {
+		start()
+	}
+	c.start = nil
+}
+
+func (c *CachedDiscovery[T]) onStart(fn func()) {
+	c.start = append(c.start, fn)
 }
 
 func (c *CachedTargetDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
@@ -77,9 +96,7 @@ func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedD
 			data:      make([]discovery_kit_api.EnrichmentData, 0),
 		},
 	}
-	for _, opt := range opts {
-		opt(&c.CachedDiscovery)
-	}
+	c.apply(opts)
 	return c
 }
 
@@ -121,7 +138,11 @@ func (c *CachedDiscovery[T]) Unwrap() any {
 type UpdateFn[U any] func(U) (U, error)
 
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
-	lastModified := time.Now()
+	c.update(fn, false)
+}
+
+func (c *CachedDiscovery[T]) update(fn UpdateFn[[]T], refresh bool) error {
+	started := time.Now()
 	log.Trace().Msg("updating discovery")
 
 	c.mu.RLock()
@@ -132,33 +153,47 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.lastModified = lastModified
+	if refresh && err == nil {
+		c.lastSuccess = started
+	} else if refresh && c.keepDataFor > 0 && !c.lastSuccess.IsZero() && time.Since(c.lastSuccess) <= c.keepDataFor {
+		// Unchanged lastModified keeps the ETag stable.
+		updateFailedEvent(err, started).Time("kept_from", c.lastSuccess).Msg("discovery update failed, keeping the last successful result")
+		return err
+	}
+	c.lastModified = started
 	c.data = data
 	c.err = err
 	if err == nil {
-		log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
+		log.Debug().TimeDiff("duration", time.Now(), started).Int("count", len(data)).Msg("discovery updated")
 	} else {
-		var extensionError extension_kit.ExtensionError
-		isExtensionError := errors.As(err, &extensionError)
-		if isExtensionError {
-			logEvent := log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Str("title", extensionError.Title)
-			if extensionError.Detail != nil {
-				logEvent = logEvent.Str("detail", *extensionError.Detail)
-			}
-			if extensionError.Instance != nil {
-				logEvent = logEvent.Str("instance", *extensionError.Instance)
-			}
-			logEvent.Msg("discovery update failed")
-		} else {
-			log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
-		}
+		updateFailedEvent(err, started).Msg("discovery update failed")
 	}
+	return err
+}
+
+func updateFailedEvent(err error, started time.Time) *zerolog.Event {
+	event := log.Warn().TimeDiff("duration", time.Now(), started)
+	var extensionError extension_kit.ExtensionError
+	if !errors.As(err, &extensionError) {
+		return event.Err(err)
+	}
+	event.Str("title", extensionError.Title)
+	if extensionError.Detail != nil {
+		event.Str("detail", *extensionError.Detail)
+	}
+	if extensionError.Instance != nil {
+		event.Str("instance", *extensionError.Instance)
+	}
+	return event
 }
 
 func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
-	c.Update(func(_ []T) ([]T, error) {
+	err := c.update(func(_ []T) ([]T, error) {
 		return c.supplier(ctx)
-	})
+	}, true)
+	if c.retry != nil {
+		c.retry.refreshed(err)
+	}
 }
 
 // WithRefreshTargetsNow triggers a refresh of the cache immediately at creation time.
@@ -174,9 +209,9 @@ func WithRefreshEnrichmentDataNow() CachedDiscoveryOpt[discovery_kit_api.Enrichm
 // WithRefreshNow triggers a refresh of the cache immediately at creation time.
 func WithRefreshNow[T any]() CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			m.Refresh(context.Background())
-		}()
+		m.onStart(func() {
+			go m.Refresh(context.Background())
+		})
 	}
 }
 
@@ -205,16 +240,18 @@ func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, throttle
 			}
 		}
 
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-ch:
-					fn(ctx)
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-ch:
+						fn(ctx)
+					}
 				}
-			}
-		}()
+			}()
+		})
 	}
 }
 
@@ -231,17 +268,102 @@ func WithRefreshEnrichmentDataInterval(ctx context.Context, interval time.Durati
 // WithRefreshInterval triggers a refresh of the cache at the given interval and will stop when the context is canceled.
 func WithRefreshInterval[T any](ctx context.Context, interval time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(interval):
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(interval):
+						m.Refresh(ctx)
+					}
+				}
+			}()
+		})
+	}
+}
+
+// WithKeepTargetsOnError keeps serving the last successful targets when a refresh fails, see WithKeepDataOnError.
+func WithKeepTargetsOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithKeepDataOnError[discovery_kit_api.Target](maxAge)
+}
+
+// WithKeepEnrichmentDataOnError keeps serving the last successful enrichment data when a refresh fails, see WithKeepDataOnError.
+func WithKeepEnrichmentDataOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithKeepDataOnError[discovery_kit_api.EnrichmentData](maxAge)
+}
+
+// WithKeepDataOnError keeps serving the last successful result when a refresh fails, while it is at most maxAge old.
+// Past maxAge, or before the first success, the error is served. Failed Update calls are not affected.
+func WithKeepDataOnError[T any](maxAge time.Duration) CachedDiscoveryOpt[T] {
+	return func(m *CachedDiscovery[T]) {
+		m.keepDataFor = maxAge
+	}
+}
+
+// WithRetryTargetsOnError retries a failed refresh with exponential backoff, see WithRetryOnError.
+func WithRetryTargetsOnError(ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithRetryOnError[discovery_kit_api.Target](ctx, minDelay, maxDelay)
+}
+
+// WithRetryEnrichmentDataOnError retries a failed refresh with exponential backoff, see WithRetryOnError.
+func WithRetryEnrichmentDataOnError(ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithRetryOnError[discovery_kit_api.EnrichmentData](ctx, minDelay, maxDelay)
+}
+
+// WithRetryOnError retries a failed refresh after minDelay, doubling the delay until it would exceed maxDelay
+// (pass the refresh interval). A successful refresh resets the backoff. Retries stop when ctx is canceled.
+func WithRetryOnError[T any](ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[T] {
+	return func(m *CachedDiscovery[T]) {
+		m.retry = &retryOnError{
+			minDelay: minDelay,
+			maxDelay: maxDelay,
+			refresh: func() {
+				if ctx.Err() == nil {
 					m.Refresh(ctx)
 				}
-			}
-		}()
+			},
+		}
 	}
+}
+
+type retryOnError struct {
+	minDelay time.Duration
+	maxDelay time.Duration
+	refresh  func()
+
+	mu    sync.Mutex
+	delay time.Duration
+	timer *time.Timer
+}
+
+func (r *retryOnError) refreshed(err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if err == nil {
+		if r.timer != nil {
+			r.timer.Stop()
+			r.timer = nil
+		}
+		r.delay = 0
+		return
+	}
+	if r.timer != nil { // a retry is already pending
+		return
+	}
+	// Past maxDelay the backoff is exhausted and the regular refreshes take over until one succeeds.
+	next := max(2*r.delay, r.minDelay)
+	if next > r.maxDelay {
+		return
+	}
+	r.delay = next
+	r.timer = time.AfterFunc(r.delay, func() {
+		r.mu.Lock()
+		r.timer = nil
+		r.mu.Unlock()
+		r.refresh()
+	})
 }
 
 type UpdateFunc[D, U any] func(data D, update U) (D, error)
@@ -258,18 +380,20 @@ func WithEnrichmentDataUpdate[U any](ctx context.Context, ch <-chan U, fn Update
 
 func WithUpdate[T, U any](ctx context.Context, ch <-chan U, fn UpdateFunc[[]T, U]) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case update := <-ch:
-					m.Update(func(data []T) ([]T, error) {
-						return fn(data, update)
-					})
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case update := <-ch:
+						m.Update(func(data []T) ([]T, error) {
+							return fn(data, update)
+						})
+					}
 				}
-			}
-		}()
+			}()
+		})
 	}
 }
 
