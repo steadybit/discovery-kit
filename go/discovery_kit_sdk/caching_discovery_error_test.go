@@ -6,8 +6,8 @@ package discovery_kit_sdk
 import (
 	"context"
 	"errors"
-	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -18,26 +18,15 @@ import (
 
 var errDiscovery = errors.New("api returned 500")
 
-func failingTargetDiscovery() *MockTargetDiscovery {
+func bareTargetDiscovery() *MockTargetDiscovery {
 	discovery := newMockTargetDiscovery()
 	discovery.On("DiscoverTargets", mock.Anything).Unset()
 	return discovery
 }
 
-// countingDiscovery counts calls race-free, unlike reading the mock's Calls while retries run.
-type countingDiscovery struct {
-	*MockTargetDiscovery
-	calls atomic.Int32
-}
-
-func (d *countingDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
-	d.calls.Add(1)
-	return d.MockTargetDiscovery.DiscoverTargets(ctx)
-}
-
 func Test_keep_targets_on_error(t *testing.T) {
 	ctx := t.Context()
-	discovery := failingTargetDiscovery()
+	discovery := bareTargetDiscovery()
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil).Once()
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
 	cached := NewCachedTargetDiscovery(discovery, WithKeepTargetsOnError(time.Hour))
@@ -49,12 +38,12 @@ func Test_keep_targets_on_error(t *testing.T) {
 	targets, err := cached.DiscoverTargets(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, []discovery_kit_api.Target{{Id: "a", Attributes: map[string][]string{}}}, targets)
-	assert.Equal(t, lastModified, cached.LastModified(), "keeping the data must not change the ETag")
+	assert.Equal(t, lastModified, cached.LastModified())
 }
 
 func Test_keep_targets_on_error_reports_error_without_previous_success(t *testing.T) {
 	ctx := t.Context()
-	discovery := failingTargetDiscovery()
+	discovery := bareTargetDiscovery()
 	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
 	cached := NewCachedTargetDiscovery(discovery, WithKeepTargetsOnError(time.Hour))
 
@@ -65,98 +54,127 @@ func Test_keep_targets_on_error_reports_error_without_previous_success(t *testin
 }
 
 func Test_keep_targets_on_error_reports_error_once_too_old(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil).Once()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
+		cached := NewCachedTargetDiscovery(discovery, WithKeepTargetsOnError(time.Hour))
+
+		cached.Refresh(ctx)
+		time.Sleep(2 * time.Hour)
+		cached.Refresh(ctx)
+
+		_, err := cached.DiscoverTargets(ctx)
+		assert.ErrorIs(t, err, errDiscovery)
+	})
+}
+
+func Test_keep_targets_on_error_ignores_failed_updates(t *testing.T) {
 	ctx := t.Context()
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil).Once()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
+	discovery := bareTargetDiscovery()
+	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
 	cached := NewCachedTargetDiscovery(discovery, WithKeepTargetsOnError(time.Hour))
 
 	cached.Refresh(ctx)
-	cached.lastSuccess = time.Now().Add(-2 * time.Hour)
-	cached.Refresh(ctx)
+	cached.Update(func([]discovery_kit_api.Target) ([]discovery_kit_api.Target, error) {
+		return nil, errDiscovery
+	})
 
 	_, err := cached.DiscoverTargets(ctx)
 	assert.ErrorIs(t, err, errDiscovery)
 }
 
-// A failed refresh used to leave the error in place until the next interval refresh, hours away for
-// discoveries against rate-limited SaaS APIs.
-func Test_retry_targets_on_error_recovers_before_next_interval(t *testing.T) {
-	ctx := t.Context()
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Once()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
-	counted := &countingDiscovery{MockTargetDiscovery: discovery}
-	cached := NewCachedTargetDiscovery(counted,
-		WithRefreshTargetsNow(),
-		WithRefreshTargetsInterval(ctx, time.Hour),
-		WithRetryTargetsOnError(ctx, 10*time.Millisecond, time.Hour),
-	)
+func Test_retry_targets_on_error_recovers_failed_initial_refresh(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Once()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
+		// The pause lets a refresh started by WithRefreshTargetsNow run before the retry option is applied.
+		pause := func(*CachedDiscovery[discovery_kit_api.Target]) { time.Sleep(time.Millisecond) }
+		cached := NewCachedTargetDiscovery(discovery,
+			WithRefreshTargetsNow(),
+			pause,
+			WithRefreshTargetsInterval(ctx, 3*time.Hour),
+			WithRetryTargetsOnError(ctx, 5*time.Minute, 3*time.Hour),
+		)
 
-	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		synctest.Wait()
+		_, err := cached.DiscoverTargets(ctx)
+		require.ErrorIs(t, err, errDiscovery)
+
+		time.Sleep(5 * time.Minute)
+		synctest.Wait()
 		targets, err := cached.DiscoverTargets(ctx)
-		assert.NoError(c, err)
-		assert.Len(c, targets, 1)
-	}, time.Second, 5*time.Millisecond)
-	assert.Equal(t, int32(2), counted.calls.Load())
+		require.NoError(t, err)
+		assert.Len(t, targets, 1)
+		discovery.AssertNumberOfCalls(t, "DiscoverTargets", 2)
+	})
 }
 
 func Test_retry_targets_on_error_backs_off_until_max_delay(t *testing.T) {
-	ctx := t.Context()
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
-	counted := &countingDiscovery{MockTargetDiscovery: discovery}
-	cached := NewCachedTargetDiscovery(counted, WithRetryTargetsOnError(ctx, 10*time.Millisecond, 30*time.Millisecond))
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
+		cached := NewCachedTargetDiscovery(discovery, WithRetryTargetsOnError(ctx, 5*time.Minute, 20*time.Minute))
 
-	cached.Refresh(ctx)
+		cached.Refresh(ctx)
+		time.Sleep(24 * time.Hour)
+		synctest.Wait()
 
-	// Retries after 10ms and 20ms; the next delay of 40ms exceeds the 30ms maximum.
-	assert.Eventually(t, func() bool { return counted.calls.Load() == 3 }, time.Second, 5*time.Millisecond)
-	time.Sleep(80 * time.Millisecond)
-	assert.Equal(t, int32(3), counted.calls.Load())
+		// Retries after 5, 10 and 20 minutes; 40 minutes would exceed the maximum.
+		discovery.AssertNumberOfCalls(t, "DiscoverTargets", 4)
+	})
 }
 
 func Test_retry_targets_on_error_is_canceled_by_successful_refresh(t *testing.T) {
-	ctx := t.Context()
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Once()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
-	counted := &countingDiscovery{MockTargetDiscovery: discovery}
-	cached := NewCachedTargetDiscovery(counted, WithRetryTargetsOnError(ctx, 30*time.Millisecond, time.Hour))
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Once()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
+		cached := NewCachedTargetDiscovery(discovery, WithRetryTargetsOnError(ctx, 5*time.Minute, time.Hour))
 
-	cached.Refresh(ctx)
-	cached.Refresh(ctx)
+		cached.Refresh(ctx)
+		cached.Refresh(ctx)
+		time.Sleep(time.Hour)
+		synctest.Wait()
 
-	time.Sleep(60 * time.Millisecond)
-	assert.Equal(t, int32(2), counted.calls.Load())
+		discovery.AssertNumberOfCalls(t, "DiscoverTargets", 2)
+	})
 }
 
 func Test_retry_targets_on_error_does_not_stack_retries(t *testing.T) {
-	ctx := t.Context()
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Twice()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
-	counted := &countingDiscovery{MockTargetDiscovery: discovery}
-	cached := NewCachedTargetDiscovery(counted, WithRetryTargetsOnError(ctx, 20*time.Millisecond, time.Hour))
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery).Twice()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target{{Id: "a"}}, nil)
+		cached := NewCachedTargetDiscovery(discovery, WithRetryTargetsOnError(ctx, 5*time.Minute, time.Hour))
 
-	cached.Refresh(ctx)
-	cached.Refresh(ctx)
+		cached.Refresh(ctx)
+		cached.Refresh(ctx)
+		time.Sleep(time.Hour)
+		synctest.Wait()
 
-	assert.Eventually(t, func() bool { return counted.calls.Load() == 3 }, time.Second, 5*time.Millisecond)
-	time.Sleep(50 * time.Millisecond)
-	assert.Equal(t, int32(3), counted.calls.Load())
+		discovery.AssertNumberOfCalls(t, "DiscoverTargets", 3)
+	})
 }
 
 func Test_retry_targets_on_error_stops_with_context(t *testing.T) {
-	ctx, cancel := context.WithCancel(t.Context())
-	discovery := failingTargetDiscovery()
-	discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
-	counted := &countingDiscovery{MockTargetDiscovery: discovery}
-	cached := NewCachedTargetDiscovery(counted, WithRetryTargetsOnError(ctx, 10*time.Millisecond, time.Hour))
+	synctest.Test(t, func(t *testing.T) {
+		ctx, cancel := context.WithCancel(t.Context())
+		discovery := bareTargetDiscovery()
+		discovery.On("DiscoverTargets", mock.Anything).Return([]discovery_kit_api.Target(nil), errDiscovery)
+		cached := NewCachedTargetDiscovery(discovery, WithRetryTargetsOnError(ctx, 5*time.Minute, time.Hour))
 
-	cached.Refresh(ctx)
-	cancel()
+		cached.Refresh(ctx)
+		cancel()
+		time.Sleep(time.Hour)
+		synctest.Wait()
 
-	time.Sleep(40 * time.Millisecond)
-	assert.Equal(t, int32(1), counted.calls.Load())
+		discovery.AssertNumberOfCalls(t, "DiscoverTargets", 1)
+	})
 }

@@ -50,15 +50,12 @@ You can decouple this by decorating your discovery using the `NewCachedTargetDis
 
 You have various options to refresh periodically once on the trigger. Also, it will help recover from any panic upon discovery.
 
-By default, a failed refresh replaces the cached data with the error until a refresh succeeds again. For discoveries with a long
-refresh interval against an external API, a single failed call would then hide all targets for the whole interval. Two opt-in
-options soften this:
+By default, a failed refresh replaces the cached data with the error until a refresh succeeds. For long refresh intervals, two
+opt-in options help:
 
-- `WithKeepTargetsOnError(maxAge)` keeps serving the last successful result when a refresh fails, as long as it is at most
-  `maxAge` old. Without any successful refresh, or past `maxAge`, the error is served.
-- `WithRetryTargetsOnError(ctx, minDelay, maxDelay)` retries a failed refresh after `minDelay`, doubling the delay on every
-  further failure until it would exceed `maxDelay`. Pass the refresh interval as `maxDelay`, so the regular refreshes take over
-  from there.
+- `WithKeepTargetsOnError(maxAge)` keeps serving the last successful result while it is at most `maxAge` old.
+- `WithRetryTargetsOnError(ctx, minDelay, maxDelay)` retries after `minDelay`, doubling the delay until it would exceed `maxDelay`.
+  Pass the refresh interval as `maxDelay`.
 
 ```go
 	ctx := context.Background()

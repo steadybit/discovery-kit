@@ -138,10 +138,10 @@ func (c *CachedDiscovery[T]) Unwrap() any {
 type UpdateFn[U any] func(U) (U, error)
 
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
-	c.update(fn)
+	c.update(fn, false)
 }
 
-func (c *CachedDiscovery[T]) update(fn UpdateFn[[]T]) error {
+func (c *CachedDiscovery[T]) update(fn UpdateFn[[]T], refresh bool) error {
 	started := time.Now()
 	log.Trace().Msg("updating discovery")
 
@@ -153,10 +153,10 @@ func (c *CachedDiscovery[T]) update(fn UpdateFn[[]T]) error {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if err == nil {
+	if refresh && err == nil {
 		c.lastSuccess = started
-	} else if c.keepDataFor > 0 && !c.lastSuccess.IsZero() && time.Since(c.lastSuccess) <= c.keepDataFor {
-		// lastModified stays untouched, so the ETag tells the agent nothing changed.
+	} else if refresh && c.keepDataFor > 0 && !c.lastSuccess.IsZero() && time.Since(c.lastSuccess) <= c.keepDataFor {
+		// Unchanged lastModified keeps the ETag stable.
 		updateFailedEvent(err, started).Time("kept_from", c.lastSuccess).Msg("discovery update failed, keeping the last successful result")
 		return err
 	}
@@ -177,12 +177,12 @@ func updateFailedEvent(err error, started time.Time) *zerolog.Event {
 	if !errors.As(err, &extensionError) {
 		return event.Err(err)
 	}
-	event = event.Str("title", extensionError.Title)
+	event.Str("title", extensionError.Title)
 	if extensionError.Detail != nil {
-		event = event.Str("detail", *extensionError.Detail)
+		event.Str("detail", *extensionError.Detail)
 	}
 	if extensionError.Instance != nil {
-		event = event.Str("instance", *extensionError.Instance)
+		event.Str("instance", *extensionError.Instance)
 	}
 	return event
 }
@@ -190,7 +190,7 @@ func updateFailedEvent(err error, started time.Time) *zerolog.Event {
 func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
 	err := c.update(func(_ []T) ([]T, error) {
 		return c.supplier(ctx)
-	})
+	}, true)
 	if c.retry != nil {
 		c.retry.refreshed(err)
 	}
@@ -283,20 +283,18 @@ func WithRefreshInterval[T any](ctx context.Context, interval time.Duration) Cac
 	}
 }
 
-// WithKeepTargetsOnError keeps serving the targets of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
+// WithKeepTargetsOnError keeps serving the last successful targets when a refresh fails, see WithKeepDataOnError.
 func WithKeepTargetsOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
 	return WithKeepDataOnError[discovery_kit_api.Target](maxAge)
 }
 
-// WithKeepEnrichmentDataOnError keeps serving the enrichment data of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
+// WithKeepEnrichmentDataOnError keeps serving the last successful enrichment data when a refresh fails, see WithKeepDataOnError.
 func WithKeepEnrichmentDataOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
 	return WithKeepDataOnError[discovery_kit_api.EnrichmentData](maxAge)
 }
 
-// WithKeepDataOnError keeps serving the data of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
-// Without it, a failed refresh replaces the data with the error until the next refresh succeeds, which is costly for discoveries
-// with a long refresh interval against an occasionally failing API. Once maxAge is exceeded, or if no refresh has succeeded yet,
-// the error is served, so a permanent failure is not hidden behind outdated data.
+// WithKeepDataOnError keeps serving the last successful result when a refresh fails, while it is at most maxAge old.
+// Past maxAge, or before the first success, the error is served. Failed Update calls are not affected.
 func WithKeepDataOnError[T any](maxAge time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
 		m.keepDataFor = maxAge
@@ -313,10 +311,8 @@ func WithRetryEnrichmentDataOnError(ctx context.Context, minDelay, maxDelay time
 	return WithRetryOnError[discovery_kit_api.EnrichmentData](ctx, minDelay, maxDelay)
 }
 
-// WithRetryOnError retries a failed refresh after minDelay, doubling the delay on every further failure, instead of waiting for
-// the next regular refresh. Retrying stops once the delay would exceed maxDelay, so pass the refresh interval as maxDelay to have
-// the regular refreshes take over from there without retries running in between. A successful refresh cancels a pending retry
-// and resets the delay. Retries stop when the context is canceled.
+// WithRetryOnError retries a failed refresh after minDelay, doubling the delay until it would exceed maxDelay
+// (pass the refresh interval). A successful refresh resets the backoff. Retries stop when ctx is canceled.
 func WithRetryOnError[T any](ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
 		m.retry = &retryOnError{
@@ -353,14 +349,15 @@ func (r *retryOnError) refreshed(err error) {
 		r.delay = 0
 		return
 	}
-	// A refresh from another source (e.g. the interval) failing while a retry is pending must not schedule a second one.
-	if r.timer != nil || r.delay > r.maxDelay {
+	if r.timer != nil { // a retry is already pending
 		return
 	}
-	r.delay = max(2*r.delay, r.minDelay)
-	if r.delay > r.maxDelay {
+	// Past maxDelay the backoff is exhausted and the regular refreshes take over until one succeeds.
+	next := max(2*r.delay, r.minDelay)
+	if next > r.maxDelay {
 		return
 	}
+	r.delay = next
 	r.timer = time.AfterFunc(r.delay, func() {
 		r.mu.Lock()
 		r.timer = nil
