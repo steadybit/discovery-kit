@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
 
 - feat: `WithKeepTargetsOnError` / `WithKeepEnrichmentDataOnError` / `WithKeepDataOnError` keep serving the last successful result for up to `maxAge` when a refresh fails.
 - feat: `WithRetryTargetsOnError` / `WithRetryEnrichmentDataOnError` / `WithRetryOnError` retry a failed refresh with exponential backoff.
