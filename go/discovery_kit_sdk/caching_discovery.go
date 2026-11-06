@@ -31,6 +31,7 @@ type CachedDiscovery[T any] struct {
 	lastSuccess  time.Time
 	keepDataFor  time.Duration
 	retry        *retryOnError
+	start        []func()
 }
 
 type CachedDiscoveryOpt[T any] func(m *CachedDiscovery[T])
@@ -62,10 +63,24 @@ func NewCachedTargetDiscovery(d TargetDiscovery, opts ...CachedDiscoveryOpt[disc
 			data:      make([]discovery_kit_api.Target, 0),
 		},
 	}
-	for _, opt := range opts {
-		opt(&c.CachedDiscovery)
-	}
+	c.apply(opts)
 	return c
+}
+
+// apply starts the background refreshes only after all options are applied, so the first refresh
+// already uses every option regardless of their order.
+func (c *CachedDiscovery[T]) apply(opts []CachedDiscoveryOpt[T]) {
+	for _, opt := range opts {
+		opt(c)
+	}
+	for _, start := range c.start {
+		start()
+	}
+	c.start = nil
+}
+
+func (c *CachedDiscovery[T]) onStart(fn func()) {
+	c.start = append(c.start, fn)
 }
 
 func (c *CachedTargetDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
@@ -81,9 +96,7 @@ func NewCachedEnrichmentDataDiscovery(d EnrichmentDataDiscovery, opts ...CachedD
 			data:      make([]discovery_kit_api.EnrichmentData, 0),
 		},
 	}
-	for _, opt := range opts {
-		opt(&c.CachedDiscovery)
-	}
+	c.apply(opts)
 	return c
 }
 
@@ -178,12 +191,8 @@ func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
 	err := c.update(func(_ []T) ([]T, error) {
 		return c.supplier(ctx)
 	})
-
-	c.mu.RLock()
-	retry := c.retry
-	c.mu.RUnlock()
-	if retry != nil {
-		retry.refreshed(err)
+	if c.retry != nil {
+		c.retry.refreshed(err)
 	}
 }
 
@@ -200,9 +209,9 @@ func WithRefreshEnrichmentDataNow() CachedDiscoveryOpt[discovery_kit_api.Enrichm
 // WithRefreshNow triggers a refresh of the cache immediately at creation time.
 func WithRefreshNow[T any]() CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			m.Refresh(context.Background())
-		}()
+		m.onStart(func() {
+			go m.Refresh(context.Background())
+		})
 	}
 }
 
@@ -231,16 +240,18 @@ func WithRefreshTrigger[T any](ctx context.Context, ch <-chan struct{}, throttle
 			}
 		}
 
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-ch:
-					fn(ctx)
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-ch:
+						fn(ctx)
+					}
 				}
-			}
-		}()
+			}()
+		})
 	}
 }
 
@@ -257,16 +268,18 @@ func WithRefreshEnrichmentDataInterval(ctx context.Context, interval time.Durati
 // WithRefreshInterval triggers a refresh of the cache at the given interval and will stop when the context is canceled.
 func WithRefreshInterval[T any](ctx context.Context, interval time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(interval):
-					m.Refresh(ctx)
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(interval):
+						m.Refresh(ctx)
+					}
 				}
-			}
-		}()
+			}()
+		})
 	}
 }
 
@@ -286,8 +299,6 @@ func WithKeepEnrichmentDataOnError(maxAge time.Duration) CachedDiscoveryOpt[disc
 // the error is served, so a permanent failure is not hidden behind outdated data.
 func WithKeepDataOnError[T any](maxAge time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		m.mu.Lock()
-		defer m.mu.Unlock()
 		m.keepDataFor = maxAge
 	}
 }
@@ -308,8 +319,6 @@ func WithRetryEnrichmentDataOnError(ctx context.Context, minDelay, maxDelay time
 // and resets the delay. Retries stop when the context is canceled.
 func WithRetryOnError[T any](ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		m.mu.Lock()
-		defer m.mu.Unlock()
 		m.retry = &retryOnError{
 			minDelay: minDelay,
 			maxDelay: maxDelay,
@@ -374,18 +383,20 @@ func WithEnrichmentDataUpdate[U any](ctx context.Context, ch <-chan U, fn Update
 
 func WithUpdate[T, U any](ctx context.Context, ch <-chan U, fn UpdateFunc[[]T, U]) CachedDiscoveryOpt[T] {
 	return func(m *CachedDiscovery[T]) {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case update := <-ch:
-					m.Update(func(data []T) ([]T, error) {
-						return fn(data, update)
-					})
+		m.onStart(func() {
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case update := <-ch:
+						m.Update(func(data []T) ([]T, error) {
+							return fn(data, update)
+						})
+					}
 				}
-			}
-		}()
+			}()
+		})
 	}
 }
 

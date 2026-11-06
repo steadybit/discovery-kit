@@ -4,6 +4,7 @@
 
 - feat: opt-in `WithKeepTargetsOnError` / `WithKeepEnrichmentDataOnError` / `WithKeepDataOnError` keep serving the last successful result of a cached discovery when a refresh fails, for at most a given age. Without it, one failed refresh hides all data until the next refresh succeeds.
 - feat: opt-in `WithRetryTargetsOnError` / `WithRetryEnrichmentDataOnError` / `WithRetryOnError` retry a failed refresh with exponential backoff instead of waiting for the next regular refresh. A successful refresh cancels a pending retry.
+- fix: background refreshes start only after all options are applied, so the first refresh uses every option regardless of their order (e.g. `WithRefreshTargetsNow` before `WithTargetsRefreshTimeout`).
 
 ## 1.4.1
 
