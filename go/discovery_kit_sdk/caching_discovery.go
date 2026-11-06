@@ -11,6 +11,7 @@ import (
 	"time"
 	"unique"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	extension_kit "github.com/steadybit/extension-kit"
@@ -27,6 +28,9 @@ type CachedDiscovery[T any] struct {
 	supplier     discoverFn[T]
 	data         []T
 	err          error
+	lastSuccess  time.Time
+	keepDataFor  time.Duration
+	retry        *retryOnError
 }
 
 type CachedDiscoveryOpt[T any] func(m *CachedDiscovery[T])
@@ -121,7 +125,11 @@ func (c *CachedDiscovery[T]) Unwrap() any {
 type UpdateFn[U any] func(U) (U, error)
 
 func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
-	lastModified := time.Now()
+	c.update(fn)
+}
+
+func (c *CachedDiscovery[T]) update(fn UpdateFn[[]T]) error {
+	started := time.Now()
 	log.Trace().Msg("updating discovery")
 
 	c.mu.RLock()
@@ -132,33 +140,51 @@ func (c *CachedDiscovery[T]) Update(fn UpdateFn[[]T]) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.lastModified = lastModified
+	if err == nil {
+		c.lastSuccess = started
+	} else if c.keepDataFor > 0 && !c.lastSuccess.IsZero() && time.Since(c.lastSuccess) <= c.keepDataFor {
+		// lastModified stays untouched, so the ETag tells the agent nothing changed.
+		updateFailedEvent(err, started).Time("kept_from", c.lastSuccess).Msg("discovery update failed, keeping the last successful result")
+		return err
+	}
+	c.lastModified = started
 	c.data = data
 	c.err = err
 	if err == nil {
-		log.Debug().TimeDiff("duration", time.Now(), c.lastModified).Int("count", len(data)).Msg("discovery updated")
+		log.Debug().TimeDiff("duration", time.Now(), started).Int("count", len(data)).Msg("discovery updated")
 	} else {
-		var extensionError extension_kit.ExtensionError
-		isExtensionError := errors.As(err, &extensionError)
-		if isExtensionError {
-			logEvent := log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Str("title", extensionError.Title)
-			if extensionError.Detail != nil {
-				logEvent = logEvent.Str("detail", *extensionError.Detail)
-			}
-			if extensionError.Instance != nil {
-				logEvent = logEvent.Str("instance", *extensionError.Instance)
-			}
-			logEvent.Msg("discovery update failed")
-		} else {
-			log.Warn().TimeDiff("duration", time.Now(), c.lastModified).Err(err).Msg("discovery update failed")
-		}
+		updateFailedEvent(err, started).Msg("discovery update failed")
 	}
+	return err
+}
+
+func updateFailedEvent(err error, started time.Time) *zerolog.Event {
+	event := log.Warn().TimeDiff("duration", time.Now(), started)
+	var extensionError extension_kit.ExtensionError
+	if !errors.As(err, &extensionError) {
+		return event.Err(err)
+	}
+	event = event.Str("title", extensionError.Title)
+	if extensionError.Detail != nil {
+		event = event.Str("detail", *extensionError.Detail)
+	}
+	if extensionError.Instance != nil {
+		event = event.Str("instance", *extensionError.Instance)
+	}
+	return event
 }
 
 func (c *CachedDiscovery[T]) Refresh(ctx context.Context) {
-	c.Update(func(_ []T) ([]T, error) {
+	err := c.update(func(_ []T) ([]T, error) {
 		return c.supplier(ctx)
 	})
+
+	c.mu.RLock()
+	retry := c.retry
+	c.mu.RUnlock()
+	if retry != nil {
+		retry.refreshed(err)
+	}
 }
 
 // WithRefreshTargetsNow triggers a refresh of the cache immediately at creation time.
@@ -242,6 +268,96 @@ func WithRefreshInterval[T any](ctx context.Context, interval time.Duration) Cac
 			}
 		}()
 	}
+}
+
+// WithKeepTargetsOnError keeps serving the targets of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
+func WithKeepTargetsOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithKeepDataOnError[discovery_kit_api.Target](maxAge)
+}
+
+// WithKeepEnrichmentDataOnError keeps serving the enrichment data of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
+func WithKeepEnrichmentDataOnError(maxAge time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithKeepDataOnError[discovery_kit_api.EnrichmentData](maxAge)
+}
+
+// WithKeepDataOnError keeps serving the data of the last successful refresh when a refresh fails, for at most maxAge since that refresh.
+// Without it, a failed refresh replaces the data with the error until the next refresh succeeds, which is costly for discoveries
+// with a long refresh interval against an occasionally failing API. Once maxAge is exceeded, or if no refresh has succeeded yet,
+// the error is served, so a permanent failure is not hidden behind outdated data.
+func WithKeepDataOnError[T any](maxAge time.Duration) CachedDiscoveryOpt[T] {
+	return func(m *CachedDiscovery[T]) {
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		m.keepDataFor = maxAge
+	}
+}
+
+// WithRetryTargetsOnError retries a failed refresh with exponential backoff, see WithRetryOnError.
+func WithRetryTargetsOnError(ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[discovery_kit_api.Target] {
+	return WithRetryOnError[discovery_kit_api.Target](ctx, minDelay, maxDelay)
+}
+
+// WithRetryEnrichmentDataOnError retries a failed refresh with exponential backoff, see WithRetryOnError.
+func WithRetryEnrichmentDataOnError(ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[discovery_kit_api.EnrichmentData] {
+	return WithRetryOnError[discovery_kit_api.EnrichmentData](ctx, minDelay, maxDelay)
+}
+
+// WithRetryOnError retries a failed refresh after minDelay, doubling the delay on every further failure, instead of waiting for
+// the next regular refresh. Retrying stops once the delay would exceed maxDelay, so pass the refresh interval as maxDelay to have
+// the regular refreshes take over from there without retries running in between. A successful refresh cancels a pending retry
+// and resets the delay. Retries stop when the context is canceled.
+func WithRetryOnError[T any](ctx context.Context, minDelay, maxDelay time.Duration) CachedDiscoveryOpt[T] {
+	return func(m *CachedDiscovery[T]) {
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		m.retry = &retryOnError{
+			minDelay: minDelay,
+			maxDelay: maxDelay,
+			refresh: func() {
+				if ctx.Err() == nil {
+					m.Refresh(ctx)
+				}
+			},
+		}
+	}
+}
+
+type retryOnError struct {
+	minDelay time.Duration
+	maxDelay time.Duration
+	refresh  func()
+
+	mu    sync.Mutex
+	delay time.Duration
+	timer *time.Timer
+}
+
+func (r *retryOnError) refreshed(err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if err == nil {
+		if r.timer != nil {
+			r.timer.Stop()
+			r.timer = nil
+		}
+		r.delay = 0
+		return
+	}
+	// A refresh from another source (e.g. the interval) failing while a retry is pending must not schedule a second one.
+	if r.timer != nil || r.delay > r.maxDelay {
+		return
+	}
+	r.delay = max(2*r.delay, r.minDelay)
+	if r.delay > r.maxDelay {
+		return
+	}
+	r.timer = time.AfterFunc(r.delay, func() {
+		r.mu.Lock()
+		r.timer = nil
+		r.mu.Unlock()
+		r.refresh()
+	})
 }
 
 type UpdateFunc[D, U any] func(data D, update U) (D, error)
