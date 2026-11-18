@@ -1,10 +1,10 @@
 module github.com/steadybit/discovery-kit/go/discovery_kit_api
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/getkin/kin-openapi v0.152.0
-	github.com/oapi-codegen/runtime v1.8.0
+	github.com/oapi-codegen/runtime v1.9.0
 )
 
 require (
